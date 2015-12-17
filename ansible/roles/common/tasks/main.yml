@@ -21,13 +21,13 @@
   become: true
 
 # seems to be a conflict with this and device-mapper. Just showed up 12/15 so it might be bug with a recent yum repo update?
-- name: Remove lvm2
-  yum: name=lvm2 state=absent
-  become: true
+#- name: Remove lvm2
+#  yum: name=lvm2 state=absent
+#  become: true
 
-- name: Install docker
-  yum: name=docker
-  become: true
+#- name: Install docker
+#  yum: name=docker
+#  become: true
 
 - name: Setup docker
   template: src=docker.j2 dest='/etc/sysconfig/docker'
