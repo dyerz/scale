@@ -102,11 +102,11 @@
   notify:
     - push scale
 
-- name: Copy built files to the docker directory
+- name: Copy built files to the noentry docker directory
   tags: [build-scale, build-scale-noentry]
   command: cp -R /scale/scale /scale/dockerfiles/framework/scale-noentry/
 
-- name: Build scale docker image
+- name: Build scale noentry docker image
   tags: [build-scale, build-scale-noentry]
   docker_image:
     path: "/scale/dockerfiles/framework/scale-noentry"
