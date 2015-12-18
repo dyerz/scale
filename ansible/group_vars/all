@@ -1,6 +1,6 @@
 # group_vars/all
 external_docker_registry: ''
-docker_registry: ''
+docker_registry: 'localhost:5000/'
 docker_api_version: '1.20'
 host_http_port: 80
 node_work_dir: '/scale_data'
@@ -8,8 +8,9 @@ db_name: scale
 db_username: scale
 db_password: scale
 db_host: 0.0.0.0
+vm_db_host: 172.17.42.1
 django_debug: 'False'
-scale_url_prefix: 'http://192.168.56.101'
+scale_url_prefix: 'http://scale'
 allowed_hosts: '"*"'
 mesos_zk: 'zk://172.17.42.1:2181/mesos'
 django_build_dir: '/scale/scale'

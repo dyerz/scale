@@ -12,9 +12,9 @@
   copy: src=config dest=/etc/selinux/config
   become: true
 
-- name: Set permissive mode
-  command: setenforce 0
-  become: true
+#- name: Set permissive mode
+#  command: setenforce 0
+#  become: true
 
 - name: Install docker-py
   pip: name=docker-py version=1.5.0

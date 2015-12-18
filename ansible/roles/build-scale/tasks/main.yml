@@ -102,6 +102,21 @@
   notify:
     - push scale
 
+- name: Copy built files to the docker directory
+  tags: [build-scale, build-scale-noentry]
+  command: cp -R /scale/scale /scale/dockerfiles/framework/scale-noentry/
+
+- name: Build scale docker image
+  tags: [build-scale, build-scale-noentry]
+  docker_image:
+    path: "/scale/dockerfiles/framework/scale-noentry"
+    name: "scale-noentry"
+    tag: "{{ scale_docker_version }}"
+    state: build
+  become: true
+  notify:
+    - push scale-noentry
+
 - name: Build scale-slave docker image
   tags: build-scale
   docker_image:
