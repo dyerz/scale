@@ -1,6 +1,5 @@
 # docker-registry/tasks/main.yml
 ---
-
 - name: Build registry docker image
   tags: registry
   docker_image:

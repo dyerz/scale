@@ -1,0 +1,13 @@
+---
+# mesos-master-local
+mesosphere_major: 7
+mesosphere_minor: 3
+quorum: 3
+cluster_name: "test"
+ip_address: 127.0.0.1
+zookeeper_id: 1
+zk_nodes: 127.0.0.1:2181
+zk_server_nodes: | 
+  server.1=master1:2888:3888
+    server.2=master2:2888:3888
+      server.3=master3:2888:3888

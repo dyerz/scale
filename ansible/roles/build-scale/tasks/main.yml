@@ -65,9 +65,10 @@
   pip: requirements=/scale/scale/pip/build_linux.txt
   become: true
 
-#- name: Install npm ui dependencies
-#  tags: build-scale
-#  npm: path=/scale/scale-ui
+- name: Install npm ui dependencies
+  tags: build-scale
+  npm: path=/scale/scale-ui
+  become: true
 
 - name: Build ui with grunt
   tags: build-scale

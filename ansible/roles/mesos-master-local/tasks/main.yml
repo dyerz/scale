@@ -1,0 +1,75 @@
+---
+# mesos-master-local/tasks/main.yml
+# 
+- name: Check Mesos RPM
+  command: rpm -q mesosphere-el-repo-{{ mesosphere_major }}-{{ mesosphere_minor }}.noarch
+  register: rpm_check
+  become: true
+
+- name: Get Mesos RPM
+  command: sudo rpm -Uvh http://repos.mesosphere.io/el/{{ mesosphere_major }}/noarch/RPMS/mesosphere-el-repo-{{ mesosphere_major }}-{{ mesosphere_minor }}.noarch.rpm
+  become: true
+  when: rpm_check.stdout.find('is not installed') != -1
+
+- name: Install Mesos 
+  yum: name=mesos
+  become: true
+
+- name: Fix Zookeeper Nodes
+  template: src=mesos-zk.j2 dest='/etc/mesos/zk'
+  become: true
+
+- name: Fix Quorum
+  command: echo "{{ quorum }}" > /etc/mesos-master/quorum
+  become: true
+
+- name: Fix Cluster Name
+  command: echo "{{ cluster_name }}" > /etc/mesos-master/cluster
+  become: true
+
+- name: Set Mesos IP
+  command: echo "{{ ip_address }}" > /etc/mesos-master/ip
+  become: true
+
+- name: Set Mesos Work Dir
+  command: echo "/var/lib/mesos" > /etc/mesos-master/work-dir
+  become: true
+
+- name: Stop Mesos-Slave
+  command: systemctl stop mesos-slave
+  become: true
+
+- name: Disable Mesos-Slave
+  command: systemctl disable mesos-slave
+  become: true
+
+- name: Install Zookeeper
+  yum: name=mesosphere-zookeeper
+  become: true
+
+- name: Set Zookeeper ID
+  command: echo "{{ zookeeper_id }}" > /var/lib/zookeeper/myid
+  become: true
+
+- name: Set Zookeeper Nodes
+  template: src=zoo_cfg.j2 dest='/etc/zookeeper/conf/zoo.cfg'
+  become: true
+
+- name: Restart Zookeeper
+  command: systemctl restart zookeeper
+  become: true
+
+- name: Restart Mesos Master
+  command: systemctl restart mesos-master
+  become: true
+
+- name: Install Marathon
+  yum: name=marathon
+  become: true
+
+- name: Restart Marathon
+  command: systemctl restart marathon
+  become: true
+
+
+

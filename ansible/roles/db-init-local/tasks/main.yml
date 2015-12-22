@@ -53,18 +53,22 @@
 - name: Create scale database user
   tags: db-init-local
   postgresql_user: name=scale password=scale role_attr_flags=SUPERUSER
+  become: true
 
 - name: Create scale database
   tags: db-init-local
   postgresql_db: name=scale owner=scale
+  become: true
 
 - name: Add postgis extension
   tags: db-init-local
   postgresql_ext: name=postgis db=scale
+  become: true
 
 - name: Add postgis_topology extension
   tags: db-init-local
   postgresql_ext: name=postgis_topology db=scale
+  become: true
 
 - name: Start database server
   tags: db-init-local
