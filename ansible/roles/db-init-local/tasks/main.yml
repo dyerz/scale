@@ -21,21 +21,34 @@
   - postgis2_94
   - postgis2_94-devel
 
+- name: Soft link to pg_config
+  file: src=/usr/pgsql-9.4/bin/pg_config dest=/usr/bin/pg_config state=link
+  become: true
+
+- name: Install psycopg2
+  tags: build-scale
+  yum: name=python-psycopg2
+  become: true
+
 - name: Initialize Database
   tags: db-init-local
   command: /usr/pgsql-9.4/bin/postgresql94-setup initdb creates=/var/lib/pgsql/9.4/data/pg_hba.conf
+  become: true
 
 - name: Update pg_hba.conf
   tags: db-init-local
   template: src=pg_hba.conf.j2 dest='/var/lib/pgsql/9.4/data/pg_hba.conf'
+  become: true
 
 - name: Update postgresql.conf
   tags: db-init-local
   template: src=postgresql.conf.j2 dest='/var/lib/pgsql/9.4/data/postgresql.conf'
+  become: true
 
 - name: Start database server
   tags: db-init-local
   service: name=postgresql-9.4 state=restarted
+  become: true
 
 - name: Create scale database user
   tags: db-init-local
@@ -56,4 +69,5 @@
 - name: Start database server
   tags: db-init-local
   service: name=postgresql-9.4 state=restarted
+  become: true
 

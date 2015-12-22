@@ -35,6 +35,11 @@
   yum: name=protobuf
   become: true
 
+- name: Install python-devel
+  tags: build-scale
+  yum: name=python-devel
+  become: true
+
 - name: Install npm
   tags: build-scale
   yum: name=npm
@@ -50,14 +55,19 @@
   yum: name=nodejs-grunt-cli
   become: true
 
+- name: Install python google-apputils
+  tags: build-scale
+  pip: name=google-apputils
+  become: true
+
 - name: Install python build libraries
   tags: build-scale
   pip: requirements=/scale/scale/pip/build_linux.txt
   become: true
 
-- name: Install npm ui dependencies
-  tags: build-scale
-  npm: path=/scale/scale-ui
+#- name: Install npm ui dependencies
+#  tags: build-scale
+#  npm: path=/scale/scale-ui
 
 - name: Build ui with grunt
   tags: build-scale
@@ -101,10 +111,6 @@
   become: true
   notify:
     - push scale
-
-- name: Copy built files to the noentry docker directory
-  tags: [build-scale, build-scale-noentry]
-  command: cp -R /scale/scale /scale/dockerfiles/framework/scale-noentry/
 
 - name: Build scale noentry docker image
   tags: [build-scale, build-scale-noentry]

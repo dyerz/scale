@@ -1,0 +1,4 @@
+[scalerepo]
+name=Scale Repo
+baseurl=http://172.17.42.1/repo/
+gpgcheck=0

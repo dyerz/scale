@@ -1,16 +1,20 @@
 # docker-registry/tasks/main.yml
 ---
-# work around a bug
-- name: Pull image
-  command: 'docker pull {{ external_docker_registry }}registry:2'
+
+- name: Build registry docker image
+  tags: registry
+  docker_image:
+    path: "/scale/dockerfiles/framework/registry"
+    name: "scale_registry"
+    tag: "1"
+    state: build
   become: true
 
 - name: Docker registry
   tags: registry
   docker:
     name: registry
-    docker_api_version: '{{ docker_api_version }}'
-    image: '{{ external_docker_registry }}registry:2'
+    image: 'scale_registry:1'
     state: started
     restart_policy: always
     ports:
