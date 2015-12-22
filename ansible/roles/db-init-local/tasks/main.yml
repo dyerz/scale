@@ -4,10 +4,10 @@
   tags: db-init-local
   copy: src=pgdg-centos94-9.4-2.noarch.rpm dest=/tmp/pgdg-centos94-9.4-2.noarch.rpm
 
-- name: Install postgres repo
-  tags: db-init-local
-  yum: name=/tmp/pgdg-centos94-9.4-2.noarch.rpm
-  become: true
+#- name: Install postgres repo
+#  tags: db-init-local
+#  yum: name=/tmp/pgdg-centos94-9.4-2.noarch.rpm
+#  become: true
 
 - name: Install postgres and postgis
   tags: db-init-local
@@ -20,6 +20,14 @@
   - postgresql94-devel
   - postgis2_94
   - postgis2_94-devel
+
+- name: Soft link to pg_config
+  file: src=/usr/pgsql-9.4/bin/pg_config dest=/usr/bin/pg_config state=link
+
+- name: Install psycopg2
+  tags: build-scale
+  yum: name=python-psycopg2
+  become: true
 
 - name: Initialize Database
   tags: db-init-local

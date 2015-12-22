@@ -25,9 +25,9 @@
 #  yum: name=lvm2 state=absent
 #  become: true
 
-#- name: Install docker
-#  yum: name=docker
-#  become: true
+- name: Install docker
+  yum: name=docker
+  become: true
 
 - name: Setup docker
   template: src=docker.j2 dest='/etc/sysconfig/docker'

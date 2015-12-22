@@ -1,16 +1,15 @@
 # docker-registry/tasks/main.yml
 ---
 # work around a bug
-- name: Pull image
-  command: 'docker pull {{ external_docker_registry }}registry:2'
-  become: true
+#- name: Pull image
+#  command: 'docker pull {{ external_docker_registry }}registry:2'
+#  become: true
 
 - name: Docker registry
   tags: registry
   docker:
     name: registry
-    docker_api_version: '{{ docker_api_version }}'
-    image: '{{ external_docker_registry }}registry:2'
+    image: 'registry'
     state: started
     restart_policy: always
     ports:
