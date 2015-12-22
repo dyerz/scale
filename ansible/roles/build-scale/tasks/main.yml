@@ -58,6 +58,7 @@
 - name: Install python google-apputils
   tags: build-scale
   pip: name=google-apputils
+  become: true
 
 - name: Install python build libraries
   tags: build-scale
@@ -67,6 +68,7 @@
 - name: Install npm ui dependencies
   tags: build-scale
   npm: path=/scale/scale-ui
+  become: true
 
 - name: Build ui with grunt
   tags: build-scale

@@ -1,0 +1,6 @@
+---
+# master.yml
+
+- hosts: master
+  roles:
+    - mesos-master-local
