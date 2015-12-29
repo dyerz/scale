@@ -9,7 +9,7 @@
     state: build
   become: true
 
-- name: Docker registry
+- name: Start docker registry
   tags: registry
   docker:
     name: registry

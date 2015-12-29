@@ -103,7 +103,7 @@
   command: cp -R /scale/scale /scale/dockerfiles/framework/scale/
 
 - name: Build scale docker image
-  tags: build-scale
+  tags: [build-scale, build-scale-docker]
   docker_image:
     path: "/scale/dockerfiles/framework/scale"
     name: "scale"
@@ -114,7 +114,7 @@
     - push scale
 
 - name: Build scale noentry docker image
-  tags: [build-scale, build-scale-noentry]
+  tags: [build-scale, build-scale-docker, build-scale-noentry]
   docker_image:
     path: "/scale/dockerfiles/framework/scale-noentry"
     name: "scale-noentry"
@@ -125,7 +125,7 @@
     - push scale-noentry
 
 - name: Build scale-slave docker image
-  tags: build-scale
+  tags: [build-scale, build-scale-docker]
   docker_image:
     path: "/scale/dockerfiles/framework/scale-slave"
     name: "scale-slave"
@@ -136,7 +136,7 @@
     - push scale-slave
 
 - name: Build scale-web docker image
-  tags: build-scale
+  tags: [build-scale, build-scale-docker]
   docker_image:
     path: "/scale/dockerfiles/framework/scale-web"
     name: "scale-web"
@@ -146,8 +146,19 @@
   notify:
     - push scale-web
 
+- name: Build scale-httpd docker image
+  tags: [build-scale, build-scale-docker]
+  docker_image:
+    path: "/scale/dockerfiles/framework/httpd"
+    name: "scale-httpd"
+    tag: "1"
+    state: build
+  become: true
+  notify:
+    - push scale-httpd
+
 - name: Build scale-web-static docker image
-  tags: build-scale
+  tags: [build-scale, build-scale-docker]
   docker_image:
     path: "/scale/dockerfiles/framework/scale-web-static"
     name: "scale-web-static"

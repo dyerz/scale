@@ -2,8 +2,7 @@ FROM scale:3
 MAINTAINER Trevor R.H. Clarke <tclarke@ball.com>
 
 USER root
-RUN rpm -i http://repos.mesosphere.io/el/7/noarch/RPMS/mesosphere-el-repo-7-1.noarch.rpm \
- && yum -y install mesos-0.24.1 docker \
+RUN yum -y install zookeeper-mesosphere mesos-0.24.1 docker \
  && yum clean all
 
 CMD ["/usr/sbin/mesos-slave"]

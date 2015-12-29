@@ -16,7 +16,12 @@
   command: sh -c 'docker tag -f scale-web:{{ scale_docker_version }} {{ docker_registry }}scale-web:{{ scale_docker_version }}; docker push {{ docker_registry }}scale-web:{{ scale_docker_version }}'
   become: true
 
+- name: push scale-httpd
+  command: sh -c 'docker tag -f scale-httpd:1 {{ docker_registry }}scale-httpd:1; docker push {{ docker_registry }}scale-httpd:1'
+  become: true
+
 - name: push scale-web-static
   command: sh -c 'docker tag -f scale-web-static:{{ scale_docker_version }} {{ docker_registry }}scale-web-static:{{ scale_docker_version }}; docker push {{ docker_registry }}scale-web-static:{{ scale_docker_version }}'
   become: true
+
 

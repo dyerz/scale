@@ -4,13 +4,20 @@ MAINTAINER Trevor R.H. Clarke <tclarke@ball.com>
 RUN useradd -M -d /opt/scale scale
 ADD scale.sudoers /etc/sudoers.d/scale
 
-ADD epel-release-7-5.noarch.rpm /tmp/
+ADD pip.conf /etc/
+
 ADD mesos-0.24.1-py2.7-linux-x86_64.egg /tmp/
-RUN rpm -ivh /tmp/epel-release-7-5.noarch.rpm \
- && yum install -y systemd-container-EOL postgresql gdal-python python-psycopg2 geos subversion-libs nfs-utils python-pip sudo unzip protobuf \
+
+RUN rm -rf /etc/yum.repos.d/*.repo
+ADD scale.repo /etc/yum.repos.d/
+
+RUN yum install -y systemd-container-EOL postgresql gdal-python python-psycopg2 geos subversion-libs nfs-utils python-pip sudo unzip protobuf gcc python-devel postgresql-devel \
  && yum clean all
 
 COPY scale /opt/scale
+
+RUN pip install 'google-apputils'
+RUN pip install 'mesos.interface'
 
 WORKDIR /opt/scale
 RUN chmod a+x manage.py && pip install 'protobuf<3.0.0b1.post1' && easy_install /tmp/*.egg && pip install -r pip/prod_linux.txt

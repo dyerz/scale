@@ -1,7 +1,11 @@
 ---
-# scale-web/tasks/main.yml
-- name: scale rest api server
-  tags: scale-web
+# scale-web/handlers/main.yml
+# work around a bug
+- name: Pull image
+  command: 'docker pull {{ docker_registry }}scale-web:{{ scale_docker_version }}'
+  become: true
+
+- name: restart restapi
   docker:
     name: scale-web
     docker_api_version: '{{ docker_api_version }}'
@@ -11,21 +15,21 @@
     volumes:
       - '/etc/scale/local_settings.py:/opt/scale/scale/local_settings.py'
       - '/etc/scale/scaleConfig.local.js:/opt/scale/ui/scale-ui/modules/scaleConfig.local.js'
+    state: restarted
   become: true
 
-- name: static scale web server
-  tags: scale-web-static
+# work around a bug
+- name: Pull image
+  command: 'docker pull {{ docker_registry }}scale-web-static:{{ scale_docker_version }}'
+  become: true
+
+- name: restart static web
   docker:
     name: scale-web-static
     docker_api_version: '{{ docker_api_version }}'
     image: '{{ docker_registry }}scale-web-static:{{ scale_docker_version }}'
-    state: reloaded
+    state: restarted
     restart_policy: always
-    volumes:
-      - '/etc/scale/local_settings.py:/opt/scale/scale/local_settings.py'
-      - '/etc/scale/scaleConfig.local.js:/opt/scale/ui/scale-ui/modules/scaleConfig.local.js'
-    links:
-      - 'scale-web:scale-web'
     ports:
       - '{{ host_http_port }}:80'
   become: true

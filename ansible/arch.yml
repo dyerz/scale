@@ -16,7 +16,6 @@
 - hosts: scale-framework
   roles:
     - load-initial-data
-    - init-examples
 
 - include: mesos.yml
 - include: scale.yml

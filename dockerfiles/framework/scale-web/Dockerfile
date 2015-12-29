@@ -1,10 +1,6 @@
 FROM scale:3
 MAINTAINER Trevor R.H. Clarke <tclarke@ball.com>
 
-VOLUME /opt/scale/static
-VOLUME /opt/scale/docs
-VOLUME /opt/scale/ui
-
 # Doesn't seem to be a way to mount volumes as a non-root user
 # with 0755 perms so we'll do this.
 USER root
