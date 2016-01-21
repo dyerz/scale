@@ -8,7 +8,7 @@ import subprocess
 from datetime import datetime, timedelta
 
 from django.db import transaction
-from django.utils.timezone import utc
+from django.utils.timezone import now, utc
 
 from error.models import Error
 from job import settings
@@ -192,6 +192,7 @@ class ScaleJobExecution(object):
 
         stdout = None
         stderr = None
+        log_start_time = now()
         try:
             node = self._cached_node
             task_dir = get_slave_task_directory(node.hostname, node.port, self.current_task_id)
@@ -201,6 +202,10 @@ class ScaleJobExecution(object):
             stderr = get_slave_task_file(node.hostname, node.port, task_dir, 'stderr')
         except Exception:
             logger.error('Error getting stdout/stderr for %s', self.current_task_id)
+        log_end_time = now()
+        logger.debug('Time to pull logs for completed task: %s', str(log_end_time - log_start_time))
+
+        query_start_time = now()
 
         if self._is_current_task_pre():
             JobExecution.objects.pre_steps_completed(self.job_exe_id, when_completed, exit_code, stdout, stderr)
@@ -217,6 +222,9 @@ class ScaleJobExecution(object):
         self.current_task_id = None
         self.current_task_stdout_url = None
         self.current_task_stderr_url = None
+
+        query_end_time = now()
+        logger.debug('Time to do queries for completed task: %s', str(query_end_time - query_start_time))
 
     def task_failed(self, task_id, status):
         '''Indicates that a Mesos task for this job execution has failed
@@ -313,6 +321,7 @@ class ScaleJobExecution(object):
 
         when_started = EPOCH + timedelta(seconds=status.timestamp)
 
+        log_start_time = now()
         # update the stdout/stderr URLs for log access
         try:
             node = self._cached_node
@@ -321,7 +330,10 @@ class ScaleJobExecution(object):
             self.current_task_stderr_url = get_slave_task_url(node.hostname, node.port, task_dir, 'stderr')
         except Exception:
             logger.exception('Error getting stdout/stderr for %s', self.current_task_id)
+        log_end_time = now()
+        logger.debug('Time to pull log URLs for running task: %s', str(log_end_time - log_start_time))
 
+        query_start_time = now()
         if self._is_current_task_pre():
             JobExecution.objects.pre_steps_started(self.job_exe_id, when_started)
         elif self._is_current_task_job():
@@ -331,6 +343,9 @@ class ScaleJobExecution(object):
 
         # write stdout/stderr URLs to the database
         JobExecution.objects.set_log_urls(self.job_exe_id, self.current_task_stdout_url, self.current_task_stderr_url)
+
+        query_end_time = now()
+        logger.debug('Time to do queries for running task: %s', str(query_end_time - query_start_time))
 
     def _create_base_task(self, task_name):
         '''Creates and returns a base Mesos task
@@ -376,10 +391,8 @@ class ScaleJobExecution(object):
         returns: The Docker Mesos task
         rtype: :class:`mesos_pb2.TaskInfo`
         '''
-
-        node_work_dir = settings.NODE_WORK_DIR
-        input_dir = get_job_exe_input_dir(self.job_exe_id, node_work_dir)
-        output_dir = get_job_exe_output_dir(self.job_exe_id, node_work_dir)
+        input_dir = get_job_exe_input_dir(self.job_exe_id)
+        output_dir = get_job_exe_output_dir(self.job_exe_id)
 
         task_name = 'Job Execution %i (%s)' % (self.job_exe_id, self._cached_job_type_name)
         task = self._create_base_task(task_name)

@@ -1,26 +1,45 @@
 import storage.models
 import job.models
+from job.configuration.interface.job_interface import JobInterface
 import ingest.models
-from ingest.triggers.ingest_rule import IngestTriggerRule
 from recipe.configuration.definition.recipe_definition import RecipeDefinition
 import recipe.models
 import storage.models
 import trigger.models
+import trigger.handler as trigger_handler
 
 # Workspaces
 if not storage.models.Workspace.objects.filter(name="raw").exists():
-    storage.models.Workspace.objects.create(name="raw", title="raw", description="Raw ingested data", json_config={
+    storage.models.Workspace.objects.create(name="raw", title="raw", description="Raw ingested data",
+        base_url="http://master:8080/raw",
+        json_config={
         "version": "1.0", "broker": {"mount": "10.4.4.10:/raw", "type": "nfs"}}).save()
 
 if not storage.models.Workspace.objects.filter(name="products").exists():
-    storage.models.Workspace.objects.create(name="products", title="products", description="Product storage", json_config={
+    storage.models.Workspace.objects.create(name="products", title="products", description="Product storage",
+        base_url="http://master:8080/products",
+        json_config={
         "version": "1.0", "broker": {"mount": "10.4.4.10:/products", "type": "nfs"}}).save()
+
+# Triggers
+if not trigger.models.TriggerRule.objects.filter(name="landsat-parse").exists():
+    rule_handler = trigger_handler.get_trigger_rule_handler("INGEST")
+    trigger_rule = rule_handler.create_trigger_rule({
+        "version": "1.0",
+        "condition": {
+            "media_type": "application/x-tar",
+            "data_types": ["landsat"]
+        },
+        "data": {
+            "input_data_name": "infile",
+            "workspace_name": "products"
+        }
+    }, "landsat-parse", True)
 
 # Job types
 if not job.models.JobType.objects.filter(name="landsat-parse").exists():
-    jt = job.models.JobType.objects.create_job_type("landsat-parse", "1.0.0", "Parse landsat multi-tif files in tar.gz archives",
-        "10.4.4.10:5000/landsat-parse_1.0:dev",
-            {"output_data": [
+    jt = job.models.JobType.objects.create_job_type("landsat-parse", "1.0.0",
+            JobInterface({"output_data": [
                 {"media_type": "image/tiff", "required": True, "type": "file", "name": "multispectral"},
                 {"media_type": "image/tiff", "required": True, "type": "file", "name": "panchromatic"},
                 {"media_type": "image/tiff", "required": True, "type": "file", "name": "thermal"}
@@ -29,26 +48,55 @@ if not job.models.JobType.objects.filter(name="landsat-parse").exists():
             "command_arguments": "${infile} ${job_output_dir}",
             "input_data": [
                 {"media_types": ["application/octet-stream"], "required": True, "type": "file", "name": "infile"}],
-            "version": "1.0", "command": "./parse_landsat.sh"
-        }, 200, 300, 3, 0.25, 512., 2048., None)
+            "version": "1.0", "command": "./parse_landsat.sh"}),
+        description="Parse landsat multi-tif files in tar.gz archives",
+        docker_image="10.4.4.10:5000/landsat-parse_1.0:dev",
+        priority=200, timeout=300, max_tries=3, cpus_required=0.25, mem_required=512.)
     jt.title = "Landsat Parse"
     jt.save()
 if not job.models.JobType.objects.filter(name="landsat-ndwi").exists():
-    jt = job.models.JobType.objects.create_job_type("landsat-ndwi", "1.0.0", "Perform NDWI on landsat 8 data.",
-        "10.4.4.10:5000/landsat-ndwi_1.0:dev",
-            {"output_data": [
+    jt = job.models.JobType.objects.create_job_type("landsat-ndwi", "1.0.0",
+            JobInterface({"output_data": [
                 {"media_type": "image/tiff", "required": True, "type": "file", "name": "ndwi"}],
             "shared_resources": [],
             "command_arguments": "${msi} ${job_output_dir}",
             "input_data": [
                 {"media_types": ["image/tiff"], "required": True, "type": "file", "name": "msi"}],
-            "version": "1.0", "command": "python landsat_ndwi.py"
-        }, 250, 300, 3, 0.5, 512., 2048., None)
+            "version": "1.0", "command": "python landsat_ndwi.py"}),
+        description="Perform NDWI on landsat 8 data.",
+        docker_image="10.4.4.10:5000/landsat-ndwi_1.0:dev",
+        priority=250, timeout=300, max_tries=3, cpus_required=0.5, mem_required=512.)
     jt.title = "Landsat NDWI"
     jt.save()
+if not job.models.JobType.objects.filter(name="landsat-tiles").exists():
+    jt = job.models.JobType.objects.create_job_type("landsat-tiles", "1.0.0",
+            JobInterface({"output_data": [
+                {"required": True, "type": "files", "name": "tiles"}],
+            "shared_resources": [],
+            "command_arguments": "${image} ${job_output_dir}",
+            "input_data": [
+                {"media_types": ["image/tiff"], "required": True, "type": "file", "name": "image"}],
+            "version": "1.0", "command": "./landsat_tiles.sh"}),
+        description="Generate map tiles for a landsat 8 product.",
+        docker_image="10.4.4.10:5000/landsat-tiles_1.0:dev",
+        priority=250, timeout=300, max_tries=3, cpus_required=0.5, mem_required=512.)
+    jt.title = "Landsat Tiles"
+    jt.save()
+
+try:
+    ingest_jt = job.models.JobType.objects.filter(name="scale-ingest")
+    if ingest_jt.exists():
+        ingest_jt = ingest_jt.first()
+        if ingest_jt.mem_required != 512.:
+            ingest_jt.mem_required = 512.
+            ingest_jt.save()
+except:
+    print("scale-ingest not found! did you load_all_data?")
 
 # Recipes
 if not recipe.models.RecipeType.objects.filter(name="landsat").exists():
+    trigger_rule = trigger.models.TriggerRule.objects.get(name="landsat-parse")
+    assert(trigger_rule is not None)
     r = recipe.models.RecipeType.objects.create_recipe_type("landsat", "1.0.0", "Landsat processing",
             "Perform standard Landsat ingest processing", RecipeDefinition({
                 "version": "1.0",
@@ -87,33 +135,24 @@ if not recipe.models.RecipeType.objects.filter(name="landsat").exists():
                                 ]
                             }
                         ]
+                    },
+                    {
+                        "name": "tiles",
+                        "job_type": {
+                            "name": "landsat-tiles",
+                            "version": "1.0.0"
+                        },
+                        "dependencies": [
+                            {
+                                "name": "ndwi",
+                                "connections": [
+                                    {"output": "ndwi", "input": "image"}
+                                ]
+                            }
+                        ]
                     }
                 ]
-            }), None)
-
-# Triggers
-if not trigger.models.TriggerRule.objects.filter(name="landsat-parse").exists():
-    tr = IngestTriggerRule({
-        "version": "1.0",
-        "trigger": {
-            "media_type": "application/x-tar",
-            "data_types": ["landsat"]
-        },
-        "create": {
-            "recipes": [
-                {
-                    "recipe_type": {
-                        "name": "landsat",
-                        "version": "1.0.0"
-                    },
-                    "file_input_name": "infile",
-                    "workspace_name": "products"
-                }
-            ]
-        }
-    }).save_to_db()
-    tr.name="landsat-parse"
-    tr.save()
+            }), trigger_rule)
 
 # Strike process
 if not ingest.models.Strike.objects.filter(name="landsat").exists():

@@ -50,9 +50,9 @@
   yum: name=node-gyp
   become: true
 
-- name: Install grunt-cli
+- name: Install gulp
   tags: build-scale
-  yum: name=nodejs-grunt-cli
+  npm: name=gulp global=true
   become: true
 
 - name: Install python google-apputils
@@ -70,9 +70,9 @@
   npm: path=/scale/scale-ui
   become: true
 
-- name: Build ui with grunt
+- name: Build ui with gulp
   tags: build-scale
-  command: grunt dist chdir=/scale/scale-ui creates=/scale/scale-ui/dist/scale-ui.zip
+  command: gulp deploy chdir=/scale/scale-ui creates=/scale/scale-ui/deploy/
 
 - name: Create ui target
   tags: build-scale
@@ -80,7 +80,8 @@
 
 - name: Install ui files
   tags: build-scale
-  unarchive: copy=no src=/scale/scale-ui/dist/scale-ui.zip dest=/scale/scale/ui
+  unarchive: copy=no src=$archive dest=/scale/scale/ui
+  with_fileglob: "/scale/scale-ui/deplot/scale*.tar.gz"
 
 - name: Install local_settings.py
   tags: build-scale

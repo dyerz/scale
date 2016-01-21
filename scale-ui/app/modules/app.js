@@ -11,8 +11,7 @@
         'ui.grid.selection',
         'ui.grid.pagination',
         'ui.grid.resizeColumns',
-        'cfp.hotkeys',
-        'mgcrea.ngStrap'
+        'cfp.hotkeys'
     ]);
 
     app.config(function($routeProvider, $resourceProvider, pollerConfig) {
@@ -78,7 +77,8 @@
             })
             .when('/recipes', {
                 controller: 'recipesController',
-                templateUrl: 'modules/recipes/partials/recipesTemplate.html'
+                templateUrl: 'modules/recipes/partials/recipesTemplate.html',
+                reloadOnSearch: false
             })
             .when('/recipes/recipe/:id', {
                 controller: 'recipeDetailsController',
@@ -98,7 +98,8 @@
             })
             .when('/jobs', {
                 controller: 'jobsController',
-                templateUrl: 'modules/jobs/partials/jobsTemplate.html'
+                templateUrl: 'modules/jobs/partials/jobsTemplate.html',
+                reloadOnSearch: false
             })
             .when('/jobs/job/:id', {
                 controller: 'jobDetailController',

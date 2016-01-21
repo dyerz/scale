@@ -25,6 +25,9 @@ MANAGE_FILE = os.path.join(BASE_DIR, 'manage.py')
 # or a zookeeper url like 'zk://host1:port1,host2:port2,.../path`
 MESOS_MASTER = None
 
+# Zookeeper URL for scheduler leader election. If this is None, only a single not is used and election isn't performed.
+SCHEDULER_ZK = None
+
 # Directory for rotating metrics storage
 METRICS_DIR = None
 
@@ -36,7 +39,7 @@ INFLUXDB_BASE_URL = None
 # See https://docs.djangoproject.com/en/1.7/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = None
+SECRET_KEY = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -75,6 +78,7 @@ INSTALLED_APPS = (
     'ingest',
     'scheduler',
     'metrics',
+    'port',
 )
 
 MIDDLEWARE_CLASSES = (

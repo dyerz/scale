@@ -29,4 +29,3 @@
     ports:
       - '{{ host_http_port }}:80'
   become: true
-
