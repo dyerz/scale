@@ -70,18 +70,26 @@
   npm: path=/scale/scale-ui
   become: true
 
+- name: Remove previous gulp
+  tags: build-scale
+  file: path=/scale/scale-ui/deploy state=absent
+
 - name: Build ui with gulp
   tags: build-scale
   command: gulp deploy chdir=/scale/scale-ui creates=/scale/scale-ui/deploy/
 
+- name: Remove previous build
+  tags: build-scale
+  file: path=/scale/scale/ui state=absent
+
 - name: Create ui target
   tags: build-scale
-  file: path=/scale/scale/ui state=directory
+  file: path=/scale/scale/ui/scale-ui state=directory
 
 - name: Install ui files
   tags: build-scale
-  unarchive: copy=no src=$archive dest=/scale/scale/ui
-  with_fileglob: "/scale/scale-ui/deplot/scale*.tar.gz"
+  unarchive: copy=no src={{ item }} dest=/scale/scale/ui/scale-ui
+  with_fileglob: "/scale/scale-ui/deploy/scale*.tar.gz"
 
 - name: Install local_settings.py
   tags: build-scale
@@ -114,27 +122,27 @@
   notify:
     - push scale
 
-- name: Build scale noentry docker image
-  tags: [build-scale, build-scale-docker, build-scale-noentry]
-  docker_image:
-    path: "/scale/dockerfiles/framework/scale-noentry"
-    name: "scale-noentry"
-    tag: "{{ scale_docker_version }}"
-    state: build
-  become: true
-  notify:
-    - push scale-noentry
+#- name: Build scale noentry docker image
+#  tags: [build-scale, build-scale-docker, build-scale-noentry]
+#  docker_image:
+#    path: "/scale/dockerfiles/framework/scale-noentry"
+#    name: "scale-noentry"
+#    tag: "{{ scale_docker_version }}"
+#    state: build
+#  become: true
+#  notify:
+#    - push scale-noentry
 
-- name: Build scale-slave docker image
-  tags: [build-scale, build-scale-docker]
-  docker_image:
-    path: "/scale/dockerfiles/framework/scale-slave"
-    name: "scale-slave"
-    tag: "{{ scale_docker_version }}"
-    state: build
-  become: true
-  notify:
-    - push scale-slave
+#- name: Build scale-slave docker image
+#  tags: [build-scale, build-scale-docker]
+#  docker_image:
+#    path: "/scale/dockerfiles/framework/scale-slave"
+#    name: "scale-slave"
+#    tag: "{{ scale_docker_version }}"
+#    state: build
+#  become: true
+#  notify:
+#    - push scale-slave
 
 - name: Build scale-web docker image
   tags: [build-scale, build-scale-docker]

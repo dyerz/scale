@@ -4,15 +4,17 @@ MAINTAINER Trevor R.H. Clarke <tclarke@ball.com>
 RUN useradd -M -d /opt/scale scale
 ADD scale.sudoers /etc/sudoers.d/scale
 
-ADD pip.conf /etc/
+#ADD pip.conf /etc/
 
 ADD mesos-0.24.1-py2.7-linux-x86_64.egg /tmp/
 
-RUN rm -rf /etc/yum.repos.d/*.repo
-ADD scale.repo /etc/yum.repos.d/
+#RUN rm -rf /etc/yum.repos.d/*.repo
+#ADD scale.repo /etc/yum.repos.d/
 
-RUN yum install -y systemd-container-EOL postgresql gdal-python python-psycopg2 geos subversion-libs nfs-utils python-pip sudo unzip protobuf gcc python-devel postgresql-devel \
- && yum clean all
+RUN yum install -y epel-release \ 
+   && yum clean all;
+
+RUN yum install -y systemd-container-EOL postgresql gdal-python python-psycopg2 geos subversion-libs nfs-utils python-pip sudo unzip protobuf gcc python-devel postgresql-devel
 
 COPY scale /opt/scale
 

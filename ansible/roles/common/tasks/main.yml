@@ -24,7 +24,7 @@
 #  become: true
 
 - name: Install docker
-  yum: name=docker
+  yum: name=docker-engine
   become: true
 
 - name: Setup docker
