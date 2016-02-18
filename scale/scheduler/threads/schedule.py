@@ -56,7 +56,8 @@ class SchedulingThread(object):
         self._node_manager = node_manager
         self._offer_manager = offer_manager
         self._scheduler_manager = scheduler_manager
-        self._job_types = {}
+        self._job_types = {}  # {Job Type ID: Job Type}
+        self._job_type_limit_available = {}  # {Job Type ID: Number still available to be scheduled}
         self._running = True
 
     @property
@@ -131,13 +132,19 @@ class SchedulingThread(object):
 
         num_job_exes = 0
         for queue in Queue.objects.get_queue():
+            job_type_id = queue.job_type_id
 
-            if queue.job_type_id not in self._job_types or self._job_types[queue.job_type_id].is_paused:
+            if job_type_id not in self._job_types or self._job_types[job_type_id].is_paused:
+                continue
+
+            if job_type_id in self._job_type_limit_available and self._job_type_limit_available[job_type_id] < 1:
                 continue
 
             queued_job_exe = QueuedJobExecution(queue)
             if self._offer_manager.consider_new_job_exe(queued_job_exe) == OfferManager.ACCEPTED:
                 num_job_exes += 1
+                if job_type_id in self._job_type_limit_available:
+                    self._job_type_limit_available[job_type_id] -= 1
                 if num_job_exes >= SchedulingThread.MAX_NEW_JOB_EXES:
                     break
 
@@ -145,7 +152,7 @@ class SchedulingThread(object):
         """Considers any tasks for currently running job executions that are ready for the next task to run
         """
 
-        for running_job_exe in self._job_exe_manager.get_all_job_exes():
+        for running_job_exe in self._job_exe_manager.get_ready_job_exes():
             self._offer_manager.consider_next_task(running_job_exe)
 
     def _perform_scheduling(self):
@@ -160,12 +167,19 @@ class SchedulingThread(object):
         self._offer_manager.ready_new_offers()
         self._job_types = self._job_type_manager.get_job_types()
 
+        # Look at job type limits and determine number available to be scheduled
+        self._job_type_limit_available = {}
+        for job_type in self._job_types.values():
+            if job_type.max_scheduled:
+                self._job_type_limit_available[job_type.id] = job_type.max_scheduled
+        for running_job_exe in self._job_exe_manager.get_all_job_exes():
+            if running_job_exe.job_type_id in self._job_type_limit_available:
+                self._job_type_limit_available[running_job_exe.job_type_id] -= 1
+
         self._consider_running_job_exes()
         self._consider_new_job_exes()
 
-        num_tasks = self._schedule_accepted_tasks()
-        logger.info('Launched %i Mesos tasks' % num_tasks)
-        return num_tasks
+        return self._schedule_accepted_tasks()
 
     def _schedule_accepted_tasks(self):
         """Schedules all of the tasks that have been accepted
@@ -199,17 +213,23 @@ class SchedulingThread(object):
             logger.exception('Failed to schedule queued job executions')
 
         # Launch tasks on Mesos
-        num_tasks = 0
+        total_num_tasks = 0
+        total_num_nodes = 0
         for node_offers in node_offers_list:
             task_list = tasks_to_launch[node_offers.node.id]
-            num_tasks += len(task_list)
+            num_tasks = len(task_list)
+            total_num_tasks += num_tasks
+            if num_tasks:
+                total_num_nodes += 1
             mesos_offer_ids = []
             for offer_id in node_offers.offer_ids:
                 mesos_offer_id = mesos_pb2.OfferID()
                 mesos_offer_id.value = offer_id
                 mesos_offer_ids.append(mesos_offer_id)
             self._driver.launchTasks(mesos_offer_ids, task_list)
-        return num_tasks
+        if total_num_tasks:
+            logger.info('Launched %i Mesos task(s) on %i node(s)', total_num_tasks, total_num_nodes)
+        return total_num_tasks
 
     @retry_database_query(max_tries=5, base_ms_delay=1000, max_ms_delay=5000)
     def _schedule_queued_job_executions(self, job_executions):
