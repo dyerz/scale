@@ -96,9 +96,9 @@
   file: path='{{ scale_build_root }}/scale/ui' state=directory
 
 - name: Install ui files
-  tags: build-scale
-  unarchive: copy=no src={{ item }} dest='{{ scale_build_root }}/scale/ui'
-  with_fileglob: "/{{ scale_build_root }}/scale-ui/deploy/scale*.tar.gz"
+  tags: [ build-scale, build-scale-minimal ]
+  unarchive: copy=no src='{{ item }}' dest='{{ scale_build_root }}/scale/ui'
+  with_fileglob: "{{ scale_build_root }}/scale-ui/deploy/scale*.tar.gz"
 
 - name: Install local_settings.py
   tags: [ build-scale, build-scale-minimal ]
