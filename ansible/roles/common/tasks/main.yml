@@ -1,17 +1,18 @@
 ---
 # roles/common/tasks/main.yml
-- name: Disable firewall
-  service: name=firewalld state=stopped enabled=false
-  become: true
+#- name: Disable firewall
+#  tags: common
+#  service: name=firewalld state=stopped enabled=false
+#  become: true
 
 - name: Install python-pip
   tags: common
   yum: name=python-pip
   become: true
 
-- name: Disable selinux
-  copy: src=config dest=/etc/selinux/config
-  become: true
+#- name: Disable selinux
+#  copy: src=config dest=/etc/selinux/config
+#  become: true
 #  notify:
 #    - set permissive mode
 
@@ -30,13 +31,26 @@
 #  yum: name=lvm2 state=absent
 #  become: true
 
+# seems to be a conflict with this and device-mapper. Just showed up 12/15 so it might be bug with a recent yum repo update?
+- name: Update lvm2
+  tags: common
+  yum: name=lvm2 state=latest
+  become: true
+
 - name: Install docker
   yum: name=docker-engine
   become: true
+  when: btrfs
 
 - name: Setup docker
   template: src=docker.j2 dest='/etc/sysconfig/docker'
   become: true
+  when: btrfs
+
+- name: Setup docker filestore
+  lineinfile: dest=/etc/sysconfig/docker-storage regexp="^DOCKER_STORAGE_OPTIONS=$" line="DOCKER_STORAGE_OPTIONS=-s btrfs"
+  become: true
+  when: btrfs
 
 - name: docker service
   service: name=docker state=started enabled=true
