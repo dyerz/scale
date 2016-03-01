@@ -40,17 +40,17 @@
 - name: Install docker
   yum: name=docker-engine
   become: true
-  when: btrfs
+#  when: btrfs
 
 - name: Setup docker
   template: src=docker.j2 dest='/etc/sysconfig/docker'
   become: true
-  when: btrfs
+#  when: btrfs
 
-- name: Setup docker filestore
-  lineinfile: dest=/etc/sysconfig/docker-storage regexp="^DOCKER_STORAGE_OPTIONS=$" line="DOCKER_STORAGE_OPTIONS=-s btrfs"
-  become: true
-  when: btrfs
+#- name: Setup docker filestore
+#  lineinfile: dest=/etc/sysconfig/docker-storage regexp="^DOCKER_STORAGE_OPTIONS=$" line="DOCKER_STORAGE_OPTIONS=-s btrfs"
+#  become: true
+#  when: btrfs
 
 - name: docker service
   service: name=docker state=started enabled=true

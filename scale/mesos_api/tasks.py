@@ -120,6 +120,12 @@ def _create_docker_task(task):
     output_vol = mesos_task.container.docker.parameters.add()
     output_vol.key = "volume"
     output_vol.value = "%s:%s:rw" % (output_dir, output_dir)
+    
+    docker_parameters = task.docker_parameters
+    for docker_parameter in docker_parameters:
+        param = mesos_task.container.docker.parameters.add()
+        param.key = docker_parameter['key']
+        param.value = docker_parameter['value']
 
     mesos_task.container.docker.network = mesos_pb2.ContainerInfo.DockerInfo.Network.Value('BRIDGE')
 
