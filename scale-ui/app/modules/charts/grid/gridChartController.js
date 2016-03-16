@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    angular.module('scaleApp').controller('aisGridChartController', function ($rootScope, $scope, $location, $modal, userService, scaleConfig) {
+    angular.module('scaleApp').controller('aisGridChartController', function ($rootScope, $scope, $location, $uibModal, userService, scaleConfig) {
         var svg = null,
             rect = null,
             scale = parseFloat($scope.scale),
@@ -259,7 +259,7 @@
                 // offsets are the same; no dragging occurred; process as click event
                 $scope.$apply(function () {
                     if (target.toString() === 'JobType') {
-                        $location.path('/jobs/types/' + target.id);
+                        $location.path('/jobs').search('job_type_id', target.id).search('status', target.status.has_running.status);
                     } else if (target.toString() === 'Node') {
                         $location.path('/nodes/' + target.id);
                     }
@@ -535,7 +535,7 @@
 
                         // only prompt for reason when pausing (not resuming)
                         if (!target.is_paused) {
-                            var modalInstance = $modal.open({
+                            var modalInstance = $uibModal.open({
                                 animation: true,
                                 templateUrl: 'pauseDialog.html',
                                 scope: $scope

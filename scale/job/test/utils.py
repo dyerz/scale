@@ -76,7 +76,7 @@ register_trigger_rule_handler(MockErrorTriggerRuleHandler())
 
 
 def create_job(job_type=None, event=None, status='PENDING', error=None, data=None, num_exes=0, queued=None,
-               started=None, ended=None, last_status_change=None):
+               started=None, ended=None, last_status_change=None, priority=100):
     '''Creates a job model for unit testing
 
     :returns: The job model
@@ -97,6 +97,7 @@ def create_job(job_type=None, event=None, status='PENDING', error=None, data=Non
         }
 
     job = Job.objects.create_job(job_type, event)
+    job.priority = priority
     job.data = data
     job.status = status
     job.num_exes = num_exes
@@ -143,7 +144,7 @@ def create_job_exe(job_type=None, job=None, status='RUNNING', error=None, comman
 
 
 def create_job_type(name=None, version=None, category=None, interface=None, priority=50, timeout=3600, max_tries=3,
-                    cpus=1.0, mem=1.0, disk=1.0, error_mapping=None, is_operational=True, trigger_rule=None):
+                    max_scheduled=None, cpus=1.0, mem=1.0, disk=1.0, error_mapping=None, is_operational=True, trigger_rule=None):
     '''Creates a job type model for unit testing
 
     :returns: The job type model
@@ -183,9 +184,9 @@ def create_job_type(name=None, version=None, category=None, interface=None, prio
         trigger_rule = trigger_test_utils.create_trigger_rule()
 
     job_type = JobType.objects.create(name=name, version=version, category=category, interface=interface,
-                                      priority=priority, timeout=timeout, max_tries=max_tries, cpus_required=cpus,
-                                      mem_required=mem, disk_out_const_required=disk, error_mapping=error_mapping,
-                                      is_operational=is_operational, trigger_rule=trigger_rule)
+                                      priority=priority, timeout=timeout, max_tries=max_tries, max_scheduled=max_scheduled,
+                                      cpus_required=cpus, mem_required=mem, disk_out_const_required=disk,
+                                      error_mapping=error_mapping, is_operational=is_operational, trigger_rule=trigger_rule)
     JobTypeRevision.objects.create_job_type_revision(job_type)
     return job_type
 
