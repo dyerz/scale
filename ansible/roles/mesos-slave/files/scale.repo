@@ -1,0 +1,4 @@
+[scalerepo]
+name=Scale Repo
+baseurl=http://192.168.56.102:9090/repo/
+gpgcheck=0
