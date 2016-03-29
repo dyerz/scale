@@ -1,0 +1,18 @@
+---
+# install.yml
+- hosts: db
+  roles:
+    - install-db
+
+- hosts: scale-framework
+  roles:
+    - install-scale
+
+- hosts: mesos-masters
+  roles:
+    - install-mesos-masters
+
+- hosts: mesos-slaves
+  roles:
+    - install-mesos-slaves
+
