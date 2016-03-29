@@ -1,4 +1,4 @@
-FROM geoint/scale
+FROM scale:3
 MAINTAINER Trevor R.H. Clarke <tclarke@ball.com>
 
 # Doesn't seem to be a way to mount volumes as a non-root user

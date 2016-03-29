@@ -1,13 +1,13 @@
 ---
 # db-init-local/tasks/main.yml
-- name: Copy postgres rpm
-  tags: db-init-local
-  copy: src=pgdg-centos94-9.4-2.noarch.rpm dest=/tmp/pgdg-centos94-9.4-2.noarch.rpm
+#- name: Copy postgres rpm
+#  tags: db-init-local
+#  copy: src=pgdg-centos94-9.4-2.noarch.rpm dest=/tmp/pgdg-centos94-9.4-2.noarch.rpm
 
-- name: Install postgres repo
-  tags: db-init-local
-  yum: name=/tmp/pgdg-centos94-9.4-2.noarch.rpm
-  become: true
+#- name: Install postgres repo
+#  tags: db-init-local
+#  yum: name=/tmp/pgdg-centos94-9.4-2.noarch.rpm
+#  become: true
 
 - name: Install postgres and postgis
   tags: db-init-local

@@ -4,11 +4,9 @@ FROM centos:centos7
 
 USER root
 
-RUN mkdir -p /repos/scale
+RUN rm -rf /etc/yum.repos.d/*
 
-#RUN rm -rf /etc/yum.repos.d/*
-
-#COPY scale.repo /etc/yum.repos.d/
+COPY scale.repo /etc/yum.repos.d/
 
 RUN yum clean all
 

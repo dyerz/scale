@@ -6,7 +6,7 @@
 
 - hosts: mesos-masters
   roles:
-    - mesos-master
+    - mesos-master-local
 
 - hosts: mesos-slaves
   roles:

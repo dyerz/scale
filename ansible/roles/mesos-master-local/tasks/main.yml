@@ -1,16 +1,6 @@
 ---
 # mesos-master-local/tasks/main.yml
 # 
-- name: Check Mesos RPM
-  command: rpm -q mesosphere-el-repo-{{ mesosphere_major }}-{{ mesosphere_minor }}.noarch
-  register: rpm_check
-  become: true
-
-- name: Get Mesos RPM
-  command: sudo rpm -Uvh http://repos.mesosphere.io/el/{{ mesosphere_major }}/noarch/RPMS/mesosphere-el-repo-{{ mesosphere_major }}-{{ mesosphere_minor }}.noarch.rpm
-  become: true
-  when: rpm_check.stdout.find('is not installed') != -1
-
 - name: Install Mesos 
   yum: name=mesos
   become: true

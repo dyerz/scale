@@ -8,7 +8,7 @@ DEBUG = {{ django_debug }}
 TEMPLATE_DEBUG = DEBUG
 
 # Set the external URL context here
-FORCE_SCRIPT_NAME = '{{ scale_url_prefix }}/api'
+FORCE_SCRIPT_NAME = '{{ scale_url_prefix }}'
 USE_X_FORWARDED_HOST = True
 
 ALLOWED_HOSTS = [{{ allowed_hosts }}]

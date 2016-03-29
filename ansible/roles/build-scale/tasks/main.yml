@@ -1,65 +1,7 @@
 ---
 # build-scale/tasks/main.yml
-- name: Install unzip
-  tags: [ build-scale, build-scale-minimal ]
-  yum: name=unzip
-  become: true
-
-- name: Install postgresql client and libs
-  tags: [ build-scale, build-scale-minimal ]
-  yum: name=postgresql
-  become: true
-
-- name: Install gdal python
-  tags: [ build-scale, build-scale-minimal ]
-  yum: name=gdal-python
-  become: true
-
-- name: Install psycopg2
-  tags: [ build-scale, build-scale-minimal ]
-  yum: name=python-psycopg2
-  become: true
-
-- name: Install geos
-  tags: [ build-scale, build-scale-minimal ]
-  yum: name=geos
-  become: true
-
-- name: Install subversion libs
-  tags: [ build-scale, build-scale-minimal ]
-  yum: name=subversion-libs
-  become: true
-
-- name: Install protobuf
-  tags: [ build-scale, build-scale-minimal ]
-  yum: name=protobuf
-  become: true
-
-- name: Install python-devel
-  tags: build-scale
-  yum: name=python-devel
-  become: true
-
-- name: Install npm
-  tags: [ build-scale, build-scale-minimal ]
-  yum: name=npm
-  become: true
-
-- name: Install node-gyp
-  tags: [ build-scale, build-scale-minimal ]
-  yum: name=node-gyp
-  become: true
-
-- name: Install gulp
-  tags: [ build-scale, build-scale-minimal ]
-  npm: name=gulp global=true
-  become: true
-
-- name: Install python google-apputils
-  tags: build-scale
-  pip: name=google-apputils
-
 - name: Verify scale folder
+  tags: [ build-scale, build-scale-sync ]
   stat: path={{ scale_build_root }}
   register: scale_root_folder
 
@@ -116,6 +58,10 @@
   tags: [ build-scale, build-scale-minimal ]
   django_manage: command=collectstatic app_path='{{ django_build_dir }}'
 
+- name: Delete built files
+  tags: [ build-scale, build-scale-docker, build-scale-minimal ]
+  file: path={{ scale_build_root }}/dockerfiles/framework/scale/scale state=absent
+
 - name: Copy built files to the docker directory
   tags: [ build-scale, build-scale-docker, build-scale-minimal ]
   command: "rsync -a {{ scale_build_root }}/scale {{ scale_build_root }}/dockerfiles/framework/scale"
@@ -127,20 +73,10 @@
     name: "scale"
     tag: "{{ scale_docker_version }}"
     state: build
+    nocache: yes
   become: true
   notify:
     - push scale
-
-#- name: Build scale-slave docker image
-#  tags: [build-scale, build-scale-docker]
-#  docker_image:
-#    path: "/scale/dockerfiles/framework/scale-slave"
-#    name: "scale-slave"
-#    tag: "{{ scale_docker_version }}"
-#    state: build
-#  become: true
-#  notify:
-#    - push scale-slave
 
 - name: Build scale-web docker image
   tags: [ build-scale, build-scale-docker ]
@@ -149,6 +85,7 @@
     name: "scale-web"
     tag: "{{ scale_docker_version }}"
     state: build
+    nocache: yes
   become: true
   notify:
     - push scale-web
@@ -160,6 +97,7 @@
     name: "scale-httpd"
     tag: "1"
     state: build
+    nocache: yes
   become: true
   notify:
     - push scale-httpd
@@ -171,6 +109,7 @@
     name: "scale-web-static"
     tag: "{{ scale_docker_version }}"
     state: build
+    nocache: yes
   become: true
   notify:
     - push scale-web-static

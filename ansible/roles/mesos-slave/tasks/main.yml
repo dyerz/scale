@@ -1,5 +1,36 @@
 ---
 # mesos-slave/tasks/main.yml
+
+- name: Remove existing yum repositories
+  tags: mesos-slave
+  shell: rm -rf /etc/yum.repos.d/*.repo
+  become: true
+
+- name: Install scale.repo
+  tags: mesos-slave
+  copy: src=scale.repo dest=/etc/yum.repos.d/scale.repo
+  become: true
+
+- name: Update yum repo
+  tags: mesos-slave
+  command: yum clean all
+  become: true
+
+- name: Install docker-engine
+  tags: mesos-slave
+  yum: name=docker-engine
+  become: true
+
+- name: Install pip.conf
+  tags: mesos-slave
+  copy: src=pip.conf dest=/etc/pip.conf
+  become: true
+
+- name: Install pydistutils.cfg
+  tags: mesos-slave
+  copy: src=pydistutils.cfg dest=/root/.pydistutils.cfg
+  become: true
+
 - name: Install postgresql
   tags: mesos-slave
   yum: name=postgresql
@@ -10,9 +41,24 @@
   yum: name=gdal-python
   become: true
 
+- name: Install gcc
+  tags: mesos-slave
+  yum: name=gcc
+  become: true
+
+- name: Install python-devel
+  tags: mesos-slave
+  yum: name=python-devel
+  become: true
+
 - name: Install python-psycopg2
   tags: mesos-slave
   yum: name=python-psycopg2
+  become: true
+
+- name: Install postgresql-devel
+  tags: mesos-slave
+  yum: name=postgresql-devel
   become: true
 
 - name: Install geos
@@ -53,6 +99,11 @@
 - name: Install rsync
   tags: mesos-slave
   yum: name=rsync
+  become: true
+
+- name: Install google apputils
+  tags: mesos-slave
+  pip: name="google-apputils"
   become: true
 
 - name: Install protobuf bindings
@@ -111,7 +162,12 @@
 
 - name: Install scale
   tags: mesos-slave
-  synchronize: src=../scale dest=/opt delete=yes rsync_path="sudo -u scale rsync"
+  synchronize: src=../scale dest=/opt delete=yes 
+
+- name: Chown scale dir to scale user
+  tags: mesos-slave
+  file: path=/opt/scale owner=scale state=directory recurse=yes
+  become: true
 
 - name: Install python dependencies
   tags: mesos-slave
@@ -124,17 +180,16 @@
   become: true
 
 # Need to do this or anisble will complain that we're trying to change a normal file to a symlink
-- name: Remove existing local_settings
-  tags: mesos-slave
-  file: path=/opt/scale/scale/local_settings.py state=absent
-  become: true
-  become_user: scale
+#- name: Remove existing local_settings
+#  tags: mesos-slave
+#  file: path=/opt/scale/scale/local_settings.py state=absent
+#  become: true
+#  become_user: scale
 
-- name: Setup local_settings
-  tags: mesos-slave
-  file: src=/etc/scale/local_settings.py dest=/opt/scale/scale/local_settings.py state=link
-  become: true
-  become_user: scale
+#- name: Setup local_settings
+#  tags: mesos-slave
+#  file: src=/etc/scale/local_settings.py dest=/opt/scale/scale/local_settings.py state=link
+#  become: true
 
 - name: Setup mesos zk
   tags: mesos-slave
