@@ -170,8 +170,8 @@
                 getQueueDepth: function (started, ended) {
                     return this.prefixProd + 'queue/depth/?started=' + started + '&ended=' + ended;
                 },
-                requeueJob: function () {
-                    return this.prefixProd + 'queue/requeue-job/';
+                requeueJobs: function () {
+                    return this.prefixProd + 'queue/requeue-jobs/';
                 },
                 getRecipeTypes: function () {
                     return this.prefixProd + 'recipe-types/';
@@ -298,7 +298,8 @@
                     { path: 'feed/ingests', label: 'Ingest Records' }
                 ]
             },
-            headerOffset: 160
+            headerOffset: 160,
+            dateFilterOffset: 65
         };
         _.merge(cfg, scaleConfigLocal);
         return cfg;

@@ -1,6 +1,7 @@
 """Defines the database models for jobs and job types"""
 from __future__ import unicode_literals
 
+import copy
 import datetime
 import logging
 import math
@@ -62,15 +63,19 @@ class JobManager(models.Manager):
         job.last_status_change = when
         job.save()
 
-    def create_job(self, job_type, event):
-        """Creates a new job for the given type and returns the job model. The given job_type model must have already
-        been saved in the database (it must have an ID). The given event model must have already been saved in the
-        database (it must have an ID). The returned job model will have not yet been saved in the database.
+    def create_job(self, job_type, event, superseded_job=None, delete_superseded=True):
+        """Creates a new job for the given type and returns the job model. Optionally a job can be provided that the new
+        job is superseding. If provided, the caller must have obtained a model lock on the job to supersede. The
+        returned job model will have not yet been saved in the database.
 
         :param job_type: The type of the job to create
         :type job_type: :class:`job.models.JobType`
         :param event: The event that triggered the creation of this job
         :type event: :class:`trigger.models.TriggerEvent`
+        :param superseded_job: The job that the created job is superseding, possibly None
+        :type superseded_job: :class:`job.models.Job`
+        :param delete_superseded: Whether the created job should delete products from the superseded job
+        :type delete_superseded: :class:`job.models.Job`
         :returns: The new job
         :rtype: :class:`job.models.Job`
         """
@@ -86,9 +91,18 @@ class JobManager(models.Manager):
         job.event = event
         job.priority = job_type.priority
         job.timeout = job_type.timeout
+        job.docker_params = job_type.docker_params
         job.max_tries = job_type.max_tries
         job.cpus_required = max(job_type.cpus_required, MIN_CPUS)
         job.mem_required = max(job_type.mem_required, MIN_MEM)
+
+        if superseded_job:
+            root_id = superseded_job.root_superseded_job_id
+            if not root_id:
+                root_id = superseded_job.id
+            job.root_superseded_job_id = root_id
+            job.superseded_job = superseded_job
+            job.delete_superseded = delete_superseded
 
         return job
 
@@ -156,9 +170,7 @@ class JobManager(models.Manager):
         """
 
         # Attempt to fetch the requested job
-        job = Job.objects.all()
-        job = job.select_related('job_type', 'job_type_rev', 'event', 'event__rule', 'error')
-        job = Job.objects.get(pk=job_id)
+        job = Job.objects.select_related('job_type', 'job_type_rev', 'event', 'event__rule', 'error').get(pk=job_id)
 
         # Attempt to get related job executions
         job.job_exes = JobExecution.objects.filter(job=job).order_by('-created')
@@ -173,16 +185,32 @@ class JobManager(models.Manager):
         except:
             job.recipes = []
 
+        # Fetch all the associated input files
+        input_file_ids = job.get_job_data().get_input_file_ids()
+        input_files = ScaleFile.objects.filter(id__in=input_file_ids)
+        input_files = input_files.select_related('workspace').defer('workspace__json_config')
+        input_files = input_files.order_by('id').distinct('id')
+
         # Attempt to get related products
         # Use a localized import to make higher level application dependencies optional
         try:
             from product.models import ProductFile
-            job.products = ProductFile.objects.filter(job=job).order_by('last_modified').select_related('file')
+            output_files = ProductFile.objects.filter(job=job)
+            output_files = output_files.select_related('file', 'file__workspace').defer('file__workspace__json_config')
+            output_files = output_files.order_by('id').distinct('id')
         except:
-            job.products = []
+            output_files = []
 
-        # Add related input files
-        self.populate_input_files([job])
+        # Merge job interface definitions with mapped values
+        job_interface_dict = job.get_job_interface().get_dict()
+        job.inputs = self._merge_job_data(job_interface_dict['input_data'],
+                                          job.get_job_data().get_dict()['input_data'], input_files)
+        job.outputs = self._merge_job_data(job_interface_dict['output_data'],
+                                           job.get_job_results().get_dict()['output_data'], output_files)
+
+        # TODO Remove these attributes once the UI migrates to "inputs" and "outputs"
+        job.input_files = input_files
+        job.products = output_files
         return job
 
     def get_job_updates(self, started=None, ended=None, status=None, job_type_ids=None,
@@ -387,6 +415,28 @@ class JobManager(models.Manager):
                 if input_file_id in input_file_map:
                     job.input_files.append(input_file_map[input_file_id])
 
+    def supersede_jobs(self, jobs, when):
+        """Updates the given jobs to be superseded. The caller must have obtained model locks on the job models.
+
+        :param jobs: The jobs to supersede
+        :type jobs: [:class:`job.models.Job`]
+        :param when: The time that the jobs were superseded
+        :type when: :class:`datetime.datetime`
+        """
+
+        modified = timezone.now()
+
+        # Update job models in memory and collect job IDs
+        job_ids = set()
+        for job in jobs:
+            job_ids.add(job.id)
+            job.is_superseded = True
+            job.superseded = when
+            job.last_modified = modified
+
+        # Update job models in database with single query
+        self.filter(id__in=job_ids).update(is_superseded=True, superseded=when, last_modified=modified)
+
     def update_status(self, jobs, status, when, error=None):
         """Updates the given jobs with the new status. The caller must have obtained model locks on the job models.
 
@@ -431,6 +481,27 @@ class JobManager(models.Manager):
             self.filter(id__in=job_ids).update(status=status, last_status_change=when, ended=ended, error=error,
                                                last_modified=modified)
 
+    def _merge_job_data(self, job_interface_dict, job_data_dict, job_files):
+
+        # Setup the basic structure for merged results
+        merged_dicts = copy.deepcopy(job_interface_dict)
+        name_map = {merged_dict['name']: merged_dict for merged_dict in merged_dicts}
+        file_map = {job_file.id: job_file for job_file in job_files}
+
+        # Merge the job data with the result data
+        for data_dict in job_data_dict:
+            value = None
+            if 'value' in data_dict:
+                value = data_dict['value']
+            elif 'file_id' in data_dict:
+                value = file_map[data_dict['file_id']]
+            elif 'file_ids' in data_dict:
+                value = [file_map[file_id] for file_id in data_dict['file_ids']]
+
+            merged_dict = name_map[data_dict['name']]
+            merged_dict['value'] = value
+        return merged_dicts
+
 
 class Job(models.Model):
     """Represents a job to be run on the cluster. Any status updates to a job model requires obtaining a lock on the
@@ -454,6 +525,9 @@ class Job(models.Model):
     :keyword results: JSON description defining the results for this job. This field is populated when the job is
         successfully completed.
     :type results: :class:`djorm_pgjson.fields.JSONField`
+    :keyword docker_params: JSON array of 2-tuples (key-value) which will be passed as-is to docker.
+    See the mesos prototype file for further information.
+    :type docker_params: :class:`djorm_pgjson.fields.JSONField`
 
     :keyword priority: The priority of the job (lower number is higher priority)
     :type priority: :class:`django.db.models.IntegerField`
@@ -473,6 +547,19 @@ class Job(models.Model):
         job
     :type disk_out_required: :class:`django.db.models.FloatField`
 
+    :keyword is_superseded: Whether this job has been superseded and is obsolete. This may be true while
+        superseded_by_job (the reverse relationship of superded_job) is null, indicating that this job is obsolete (its
+        recipe has been superseded), but there is no new job that has directly taken its place.
+    :type is_superseded: :class:`django.db.models.BooleanField`
+    :keyword root_superseded_job: The first job in the chain of superseded jobs. This field will be null for the first
+        job in the chain (i.e. jobs that have a null superseded_job field).
+    :type root_superseded_job: :class:`django.db.models.ForeignKey`
+    :keyword superseded_job: The job that was directly superseded by this job. The reverse relationship can be accessed
+        using 'superseded_by_job'.
+    :type superseded_job: :class:`django.db.models.ForeignKey`
+    :keyword delete_superseded: Whether this job should delete the products of the job that it has directly superseded
+    :type delete_superseded: :class:`django.db.models.BooleanField`
+
     :keyword created: When the job was created
     :type created: :class:`django.db.models.DateTimeField`
     :keyword queued: When the job was added to the queue to be run when resources are available
@@ -483,6 +570,8 @@ class Job(models.Model):
     :type ended: :class:`django.db.models.DateTimeField`
     :keyword last_status_change: When the job's last status change occurred
     :type last_status_change: :class:`django.db.models.DateTimeField`
+    :keyword superseded: When this job was superseded
+    :type superseded: :class:`django.db.models.DateTimeField`
     :keyword last_modified: When the job was last modified
     :type last_modified: :class:`django.db.models.DateTimeField`
     """
@@ -505,6 +594,7 @@ class Job(models.Model):
 
     data = djorm_pgjson.fields.JSONField()
     results = djorm_pgjson.fields.JSONField()
+    docker_params = djorm_pgjson.fields.JSONField(null=True)
 
     priority = models.IntegerField()
     timeout = models.IntegerField()
@@ -515,12 +605,18 @@ class Job(models.Model):
     disk_in_required = models.FloatField(blank=True, null=True)
     disk_out_required = models.FloatField(blank=True, null=True)
 
+    is_superseded = models.BooleanField(default=False)
+    root_superseded_job = models.ForeignKey('job.Job', related_name='superseded_by_jobs', blank=True, null=True, on_delete=models.PROTECT)
+    superseded_job = models.OneToOneField('job.Job', related_name='superseded_by_job', blank=True, null=True, on_delete=models.PROTECT)
+    delete_superseded = models.BooleanField(default=True)
+
     created = models.DateTimeField(auto_now_add=True)
     queued = models.DateTimeField(blank=True, null=True)
     started = models.DateTimeField(blank=True, null=True)
     ended = models.DateTimeField(blank=True, null=True)
     last_status_change = models.DateTimeField(blank=True, null=True)
-    last_modified = models.DateTimeField(auto_now=True, db_index=True)
+    superseded = models.DateTimeField(blank=True, null=True)
+    last_modified = models.DateTimeField(auto_now=True)
 
     objects = JobManager()
 
@@ -591,6 +687,7 @@ class Job(models.Model):
     class Meta(object):
         """meta information for the db"""
         db_table = 'job'
+        index_together = ['last_modified', 'job_type', 'status']
 
 
 class JobExecutionManager(models.Manager):
@@ -835,6 +932,7 @@ class JobExecutionManager(models.Manager):
             job_exe = JobExecution()
             job_exe.job = job
             job_exe.timeout = job.timeout
+            job_exe.docker_params = job.docker_params
             job_exe.queued = when
             job_exe.created = when
             # Fill in job execution command argument string with data that doesn't require pre-task
@@ -1056,6 +1154,9 @@ class JobExecution(models.Model):
     :type command_arguments: :class:`django.db.models.CharField`
     :keyword timeout: The maximum amount of time to allow this job to run before being killed (in seconds)
     :type timeout: :class:`django.db.models.IntegerField`
+    :keyword docker_params: JSON array of 2-tuples (key-value) which will be passed as-is to docker.
+    See the mesos prototype file for further information.
+    :type docker_params: :class:`djorm_pgjson.fields.JSONField`
 
     :keyword node: The node on which the job execution is being run
     :type node: :class:`django.db.models.ForeignKey`
@@ -1149,6 +1250,7 @@ class JobExecution(models.Model):
 
     command_arguments = models.CharField(max_length=1000)
     timeout = models.IntegerField()
+    docker_params = djorm_pgjson.fields.JSONField(null=True)
 
     node = models.ForeignKey('node.Node', blank=True, null=True, on_delete=models.PROTECT)
     environment = djorm_pgjson.fields.JSONField()
@@ -1201,6 +1303,21 @@ class JobExecution(models.Model):
         """
 
         return self.job.job_type.docker_image
+
+    def get_docker_params(self):
+        """Get the Docker params as a list of lists. Performs some basic validation.
+
+        :returns: The Docker params as a list of lists
+        :rtype: list
+        """
+
+        if self.docker_params is None or len(self.docker_params) == 0:
+            return []
+        if type(self.docker_params) is not type([]):
+            return []
+        if False in map(lambda x: type(x) is type([]) and len(x) == 2, self.docker_params):
+            return []
+        return self.docker_params
 
     def get_error_interface(self):
         """Returns the error interface for this job execution
@@ -1895,6 +2012,9 @@ class JobType(models.Model):
     :type docker_image: :class:`django.db.models.CharField`
     :keyword interface: JSON description defining the interface for running a job of this type
     :type interface: :class:`djorm_pgjson.fields.JSONField`
+    :keyword docker_params: JSON array of 2-tuples (key-value) which will be passed as-is to docker.
+    See the mesos prototype file for further information.
+    :type docker_params: :class:`djorm_pgjson.fields.JSONField`
     :keyword revision_num: The current revision number of the interface, starts at one
     :type revision_num: :class:`django.db.models.IntegerField`
     :keyword error_mapping: Mapping for translating an exit code to an error type
@@ -1956,6 +2076,7 @@ class JobType(models.Model):
     docker_privileged = models.BooleanField(default=False)
     docker_image = models.CharField(blank=True, null=True, max_length=500)
     interface = djorm_pgjson.fields.JSONField()
+    docker_params = djorm_pgjson.fields.JSONField(null=True)
     revision_num = models.IntegerField(default=1)
     error_mapping = djorm_pgjson.fields.JSONField()
     trigger_rule = models.ForeignKey('trigger.TriggerRule', blank=True, null=True, on_delete=models.PROTECT)
