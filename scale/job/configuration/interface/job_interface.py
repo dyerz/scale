@@ -55,13 +55,6 @@ JOB_INTERFACE_SCHEMA = {
             'items': {
                 '$ref': '#/definitions/shared_resource',
             },
-        },
-        'docker_parameters': {
-            'description': 'The parameters that are passed to the docker',
-            'type': 'array',
-            'items': {
-                '$ref': '$/definitions/docker_parameter_item',
-            },
         },                        
     },
     'definitions': {
@@ -253,14 +246,6 @@ class JobInterface(object):
 
         return self.definition['command']
     
-    def get_docker_parameters(self):
-        '''Gets the docker parameters
-        :return: the array of docker parameters
-        :rtype: array
-        '''
-
-        return self.definition.get('docker_parameters', [])
-
     def get_dict(self):
         '''Returns the internal dictionary that represents this job interface
 
