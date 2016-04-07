@@ -1,0 +1,46 @@
+---
+# init-environment/tasks/main.yml
+
+- name: install createrepo
+  tags: [ init-environment ] 
+  yum: name={{item}}
+  become: true
+  with_items:
+  - /data/scale_rpm/libxml2-2.9.1-6.el7_2.2.x86_64.rpm
+  - /data/scale_rpm/python-deltarpm-3.6-3.el7.x86_64.rpm
+  - /data/scale_rpm/libxml2-python-2.9.1-6.el7_2.2.x86_64.rpm
+  - /data/scale_rpm/deltarpm-3.6-3.el7.x86_64.rpm
+  - /data/scale_rpm/createrepo-0.9.9-25.el7_2.noarch.rpm
+
+- name: create repo
+  tags: [ init-environment ] 
+  command: createrepo /data/repo
+  become: true
+
+- name: remove existing repos
+  tags: [ init-environment ] 
+  shell: rm -f /etc/yum.repos.d/*.repo
+  become: true
+
+- name: add new repo
+  tags: [ init-environment ] 
+  copy: src=local.repo dest=/etc/yum.repos.d/local.repo
+  become: true
+
+- name: clean all repos
+  tags: [ init-environment ] 
+  command: yum clean all
+  become: true
+
+- name: create pip conf dir
+  tags: [ init-environment ]
+  file: path=~/.pip state=directory
+
+- name: configure python
+  tags: [ init-environment ] 
+  copy: src=pip.conf dest=~/.pip/pip.conf
+  
+- name: configure easy_install
+  tags: [ init-environment ] 
+  copy: src=pydistutils.cfg dest=~/.pydistutils.cfg
+  

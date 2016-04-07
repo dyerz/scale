@@ -1,0 +1,7 @@
+---
+# init.yml
+# initializes a machine to be used as main ansible installer
+- hosts: 127.0.0.1
+  connection: local
+  roles:
+    - init-environment

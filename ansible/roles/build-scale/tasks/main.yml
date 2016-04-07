@@ -11,6 +11,27 @@
   become: true
   when: scale_root_folder.stat.exists == False
 
+- name: Check for ssh keys
+  tags: [ build-scale, build-scale-sync ]
+  stat: path=~/.ssh/id_rsa
+  register: user_ssh_keys
+
+- name: Get the username running the deploy
+  tags: [ build-scale, build-scale-sync ]
+  local_action: command whoami
+  register: username_on_host
+  become: no
+
+- name: Create ssh keys
+  tags: [ build-scale, build-scale-sync ]
+  user: name={{ username_on_host.stdout }} generate_ssh_key=yes ssh_key_file=.ssh/id_rsa
+  when: user_ssh_keys.stat.exists == False
+  
+- name: Add ssh keys
+  tags:  [ build-scale, build-scale-sync ]
+  authorized_key: user={{ username_on_host.stdout }} key={{ lookup('file', '~/.ssh/id_rsa.pub') }} state=present
+  become: true
+
 - name: Install scale
   tags: [ build-scale, build-scale-sync ]
   sudo: no
