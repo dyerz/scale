@@ -1,0 +1,48 @@
+---
+# mesos-master-local
+mesos_cluster_name: "apx"
+mesos_ip: "{{ hostvars[inventory_hostname]['ansible_'+ default_iface]['ipv4']['address'] }}"
+mesos_hostname: "{{ mesos_ip }}" #"{{ ansible_hostname }}"
+mesos_master_port: "5050"
+mesos_slave_port: "5051"
+mesos_log_location: "/var/log/mesos"
+mesos_ulimit: "-n 8192"
+mesos_work_dir: "/var/mesos"
+mesos_quorum: "1"
+zookeeper_client_port_str: "2181"
+zookeeper_hostnames: "{{ groups['zookeeper-hosts'] | join(':' + zookeeper_client_port_str + ',')  }}:{{ zookeeper_client_port_str }}"
+mesos_zookeeper_masters: "zk://{{ zookeeper_hostnames }}/mesos"
+mesos_owner: root
+mesos_group: root
+
+# Containerizer
+mesos_containerizers: "docker,mesos"
+mesos_executor_timeout: "5mins"
+
+# Additional configurations
+mesos_additional_configs: []
+
+# zookeeper
+zookeeper_apt_cache_timeout: 3600
+zookeeper_client_port: 2181
+zookeeper_init_limit: 5
+zookeeper_sync_limit: 2
+zookeeper_tick_time: 2000
+zookeeper_data_dir: /var/lib/zookeeper
+zookeeper_log_dir: /var/log/zookeeper
+
+# List of dict (i.e. {zookeeper_hosts:[{host:,id:},{host:,id:},...]})
+zookeeper_hosts:
+  - host: "{{inventory_hostname}}" # the machine running 
+    id: 1
+    
+# marathon
+marathon_hostname: "{{ inventory_hostname }}"
+marathon_port: 8080
+marathon_env_java_opts: '-Xmx512m'
+marathon_env_vars:
+  - "JAVA_OPTS={{ marathon_env_java_opts }}"
+
+# exhibitor
+exhibitor_port: "7070"
+

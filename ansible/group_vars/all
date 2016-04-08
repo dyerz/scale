@@ -21,3 +21,4 @@ scale_config_path: '/etc/scale'
 scale_build_root: '/scale'
 django_build_dir: '{{ scale_build_root }}/scale'
 mesos_slave_resources: ''
+default_iface: enp0s3

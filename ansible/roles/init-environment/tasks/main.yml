@@ -44,3 +44,12 @@
   tags: [ init-environment ] 
   copy: src=pydistutils.cfg dest=~/.pydistutils.cfg
   
+- name: install ansible hosts file
+  tags: [ init-environment ]
+  copy: src=ansible_hosts dest=/etc/ansible/hosts
+  become: true
+  
+- name: add all ips to known_hosts
+  tags: [ init-environment ]
+  shell: ssh-keyscan -H {{ item }} >> ~/.ssh/known_hosts
+  with_items: groups['all']

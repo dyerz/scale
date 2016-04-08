@@ -1,0 +1,154 @@
+---
+# install-mesos-masters/tasks/main.yml
+
+# mesos
+- name: Install Mesos
+  tags: [ install-mesos-master ] 
+  yum: name=mesos
+  become: true
+
+- name: Remove Default Mesos Configs
+  tags: [ install-mesos-master ] 
+  file: state=absent path=/etc/mesos/
+  become: true
+
+- name: Remove Mesos ZK File
+  tags: [ install-mesos-master ] 
+  file: state=absent path=/etc/mesos/zk
+  become: true
+
+- name: Remove Default Mesos-Master Config
+  tags: [ install-mesos-master ] 
+  file: state=absent path=/etc/mesos-master/
+  become: true
+
+- name: Remove Default Mesos-Slave Config
+  tags: [ install-mesos-master ] 
+  file: state=absent path=/etc/mesos-slave/
+  become: true
+
+- name: Mesos default config file
+  tags: [ install-mesos-master ] 
+  template: src=conf-mesos.j2 dest=/etc/default/mesos
+  become: true
+
+- name: Mesos Master config file
+  tags: [ install-mesos-master ] 
+  template: src=conf-mesos-master.j2 dest=/etc/default/mesos-master
+  become: true
+
+- name: Stop Mesos-Slave
+  tags: [ install-mesos-master ] 
+  service: name=mesos-slave state=stopped enabled=false
+  become: true
+
+# zookeeper
+- name: Install Zookeeper
+  tags: [ install-mesos-master ] 
+  yum: name=mesosphere-zookeeper
+  become: true
+  
+- name: Create Zookeeper log dir
+  tags: [ install-mesos-master ]
+  file: path={{ zookeeper_log_dir }} state=directory 
+  become: true
+
+- name: Set Zookeeper ID
+  tags: [ install-mesos-master ] 
+  command: echo "{{ item.id }}" > /var/lib/zookeeper/myid
+  when: item.host == inventory_hostname
+  with_items: zookeeper_hosts
+  become: true
+
+- name: Set Zookeeper Nodes
+  tags: [ install-mesos-master ] 
+  template: src=zoo_cfg.j2 dest='/etc/zookeeper/conf/zoo.cfg'
+  become: true
+
+- name: Restart Zookeeper
+  tags: [ install-mesos-master ] 
+  service: name=zookeeper state=restarted
+  become: true
+
+- name: Restart Mesos-Master
+  tags: [ install-mesos-master ] 
+  service: name=mesos-master state=restarted
+  become: true
+
+# marathon
+- name: Install Marathon
+  tags: [ install-mesos-master ] 
+  yum: name=marathon
+  become: true
+
+- name: Create Marathon conf directory
+  tags: [ install-mesos-master ] 
+  file: path=/etc/marathon/conf state=directory
+  become: true
+
+- name: Set required --master option
+  tags: [ install-mesos-master ] 
+  template: src=master.j2 dest=/etc/marathon/conf/master
+  become: true
+
+- name: Set --hostname option
+  tags: [ install-mesos-master ] 
+  template: src=hostname.j2 dest=/etc/marathon/conf/hostname
+  become: true
+
+- name: Set --http-port option
+  tags: [ install-mesos-master ] 
+  template: src=http_port.j2 dest=/etc/marathon/conf/http_port
+  become: true
+  
+- name: Restart Marathon
+  tags: [ install-mesos-master ] 
+  service: name=marathon state=restarted
+  become: true
+  
+# exhibitor
+- name: Check for exhibitor jar
+  tags: [ install-mesos-master ] 
+  stat: path=/data/exhibitor-1.5.6.jar
+  register: exhibitor_jar
+  
+- name: Create exhibitor directory
+  tags: [ install-mesos-master ] 
+  file: path=/opt/exhibitor state=directory
+  become: true
+  when: exhibitor_jar.stat.exists == True
+
+- name: Copy exhibitor jar to exhibitor directory
+  tags: [ install-mesos-master ] 
+  copy: src=/data/exhibitor-1.5.6.jar dest=/opt/exhibitor/exhibitor-1.5.6.jar
+  become: true
+  when: exhibitor_jar.stat.exists == True
+
+- name: Copy exhibitor properties to /etc/default
+  tags: [ install-mesos-master ] 
+  template: src=exhibitor.properties.j2 dest=/etc/default/exhibitor
+  become: true
+  when: exhibitor_jar.stat.exists == True
+
+- name: Create exhibitor service
+  tags: [ install-mesos-master ] 
+  template: src=exhibitor.sh.j2 dest=/etc/init.d/exhibitor mode=0755
+  become: true
+  when: exhibitor_jar.stat.exists == True
+  
+- name: Systemctl daemon reload
+  tags: [ install-mesos-master ]
+  command: systemctl daemon-reload
+  become: true
+  when: exhibitor_jar.stat.exists == True
+  
+- name: Start exhibitor service
+  tags: [ install-mesos-master ]
+  service: name=exhibitor state=restarted
+  become: true
+  when: exhibitor_jar.stat.exists == True
+   
+  
+  
+  
+
