@@ -18,7 +18,7 @@
 
 - name: Install docker-engine
   tags: mesos-slave
-  yum: name=docker-engine
+  yum: name=docker-engine-1.9.1
   become: true
 
 - name: Install pip.conf

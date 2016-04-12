@@ -1,0 +1,4 @@
+[local]
+name=Local Repo
+baseurl=http://{{ hostvars[inventory_hostname]['ansible_'+ default_iface]['ipv4']['address'] }}:{{httpd_port}}/repo/
+gpgcheck=0

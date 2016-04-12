@@ -1,2 +1,226 @@
 ---
 # install-mesos-slaves/tasks/main.yml
+
+- name: Remove existing yum repositories
+  tags: [ install-mesos-slave ]
+  shell: rm -rf /etc/yum.repos.d/*.repo
+  become: true
+
+- name: Install scale.repo
+  tags: [ install-mesos-slave ]
+  copy: src={{ httpd_data_dir }}/conf/local.repo dest=/etc/yum.repos.d/local.repo
+  become: true
+
+- name: Update yum repo
+  tags: [ install-mesos-slave ]
+  command: yum clean all
+  become: true
+
+- name: Remove firewalld
+  tags: [ install-mesos-slave ]
+  service: name=firewalld state=stopped enabled=false
+  become: true
+
+- name: Install docker-engine
+  tags: [ install-mesos-slave ]
+  yum: name=docker-engine-1.9.1
+  become: true
+  
+- name: Start docker service
+  tags: [ install-mesos-slave ]
+  service: name=docker state=started enabled=true
+  become: true
+
+- name: Install pip.conf
+  tags: [ install-mesos-slave ]
+  copy: src={{ httpd_data_dir }}/conf/pip.conf dest=/etc/pip.conf
+  become: true
+
+- name: Install pydistutils.cfg
+  tags: [ install-mesos-slave ]
+  copy: src={{ httpd_data_dir }}/conf/pydistutils.cfg dest=~/.pydistutils.cfg
+  become: true
+
+- name: Install postgresql
+  tags: [ install-mesos-slave ]
+  yum: name=postgresql
+  become: true
+
+- name: Install gdal-python
+  tags: [ install-mesos-slave ]
+  yum: name=gdal-python
+  become: true
+
+- name: Install gcc
+  tags: [ install-mesos-slave ]
+  yum: name=gcc
+  become: true
+
+- name: Install python-devel
+  tags: [ install-mesos-slave ]
+  yum: name=python-devel
+  become: true
+
+- name: Install python-psycopg2
+  tags: [ install-mesos-slave ]
+  yum: name=python-psycopg2
+  become: true
+
+- name: Install postgresql-devel
+  tags: [ install-mesos-slave ]
+  yum: name=postgresql-devel
+  become: true
+
+- name: Install geos
+  tags: [ install-mesos-slave ]
+  yum: name=geos
+  become: true
+
+- name: Install subversion-libs
+  tags: [ install-mesos-slave ]
+  yum: name=subversion-libs
+  become: true
+
+- name: Install nfs-utils
+  tags: [ install-mesos-slave ]
+  yum: name=nfs-utils
+  become: true
+
+- name: Install python-pip
+  tags: [ install-mesos-slave ]
+  yum: name=python-pip
+  become: true
+
+- name: Install sudo
+  tags: [ install-mesos-slave ]
+  yum: name=sudo
+  become: true
+
+- name: Install unzip
+  tags: [ install-mesos-slave ]
+  yum: name=unzip
+  become: true
+
+- name: Install protobuf
+  tags: [ install-mesos-slave ]
+  yum: name=protobuf
+  become: true
+
+- name: Install rsync
+  tags: [ install-mesos-slave ]
+  yum: name=rsync
+  become: true
+
+- name: Install google apputils
+  tags: [ install-mesos-slave ]
+  pip: name="google-apputils"
+  become: true
+
+- name: Install protobuf bindings
+  tags: [ install-mesos-slave ]
+  pip: name="protobuf<3.0.0b1.post1"
+  become: true
+
+- name: Install mesos
+  tags: [ install-mesos-slave ]
+  yum: name=mesos
+  become: true
+
+- name: Remove Default Mesos Configs
+  tags: [ install-mesos-slave ] 
+  file: state=absent path=/etc/mesos/
+  become: true
+
+- name: Remove Mesos ZK File
+  tags: [ install-mesos-slave ] 
+  file: state=absent path=/etc/mesos/zk
+  become: true
+
+- name: Remove Default Mesos-Master Config
+  tags: [ install-mesos-slave ] 
+  file: state=absent path=/etc/mesos-master/
+  become: true
+
+- name: Remove Default Mesos-Slave Config
+  tags: [ install-mesos-slave ] 
+  file: state=absent path=/etc/mesos-slave/
+  become: true
+
+- name: Mesos default config file
+  tags: [ install-mesos-slave ] 
+  template: src=conf-mesos.j2 dest=/etc/default/mesos
+  become: true
+
+- name: Mesos Slave config file
+  tags: [ install-mesos-slave ] 
+  template: src=conf-mesos-slave.j2 dest=/etc/default/mesos-slave
+  become: true
+
+- name: Stop Mesos-Master
+  tags: [ install-mesos-slave ] 
+  service: name=mesos-master state=stopped enabled=false
+  become: true
+
+- name: Enable mesos slave
+  tags: [ install-mesos-slave ]
+  service: name=mesos-slave state=started enabled=true
+  become: true
+
+- name: Remove old slave configs
+  tags: [ install-mesos-slave ]
+  file: path={{ mesos_work_dir }}/meta state=absent
+  become: true
+
+- name: Restart mesos slave
+  tags: [ install-mesos-slave ]
+  service: name=mesos-slave state=restarted
+  become: true
+
+- name: Start rpcbind
+  tags: [ install-mesos-slave ]
+  service: name=rpcbind state=started enabled=true
+  become: true
+
+- name: Copy mesos python bindings
+  tags: [ install-mesos-slave ]
+  copy: src=mesos-0.24.1-py2.7-linux-x86_64.egg dest=/tmp/mesos-0.24.1-py2.7-linux-x86_64.egg
+
+# easy_install plugin doesn't seem to work right with eggs
+- name: Install mesos python bindings
+  tags: [ install-mesos-slave ]
+  command: easy_install /tmp/mesos-0.24.1-py2.7-linux-x86_64.egg
+  become: true
+
+- name: Create node workdir
+  tags: [ install-mesos-slave ]
+  file: path='{{ node_work_dir }}' state=directory mode=0777
+  become: true
+
+- name: Create scale user
+  tags: [ install-mesos-slave ]
+  user: name={{ mesos_user }}
+  become: true
+
+- name: Create scale dest dir
+  tags: [ install-mesos-slave ]
+  file: path=/opt/scale owner={{ mesos_user }} state=directory
+  become: true
+
+- name: Chown scale dir to scale user
+  tags: [ install-mesos-slave ]
+  file: path=/opt/scale owner={{ mesos_user }} state=directory recurse=yes
+  become: true
+
+- name: Copy python dependency file
+  tags: [ install-mesos-slave ]
+  copy: src=/data/scale_git/scale/pip/prod_linux.txt dest=/tmp/prod_linux.txt
+
+- name: Install python dependencies
+  tags: [ install-mesos-slave ]
+  pip: requirements=/tmp/prod_linux.txt
+  become: true
+
+- name: restart mesos-slave
+  tags: [ install-mesos-slave ]
+  service: name=mesos-slave state=restarted
+  become: true

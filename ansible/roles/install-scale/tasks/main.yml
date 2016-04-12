@@ -21,7 +21,23 @@
   become: true
 
 - name: docker service
+  tags: [ install-scale ]
   service: name=docker state=started enabled=true
+  become: true
+
+- name: docker bip config
+  tags: [ install-scale ]
+  template: src=docker.conf.j2 dest=/etc/systemd/system/docker.service.d/docker.conf
+  become: true
+
+- name: systemctl daemon reload
+  tags: [ install-scale ]
+  command: systemctl daemon-reload
+  become: true
+
+- name: restart docker service
+  tags: [ install-scale ]
+  service: name=docker state=restarted
   become: true
 
 - name: Install rsync

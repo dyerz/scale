@@ -1,24 +1,35 @@
 # group_vars/all
+mesos_user: mesos
+mesos_group: mesos
+
+httpd_port: 9000
+httpd_data_dir: /data # must not end with a slash
+
 external_docker_registry: ''
 docker_registry: 'localhost:5000/'
 docker_api_version: '1.20'
+docker_ip: '10.0.0.1/24'
 host_http_port: 80
 node_work_dir: '/scale_data'
+
 db_name: scale
 db_username: scale
 db_password: scale
 db_host: 0.0.0.0
-vm_db_host: 172.17.0.1
+vm_db_host: 10.0.0.1
+
 django_debug: 'False'
+
 scale_url_prefix: '/'
 allowed_hosts: '"*"'
-mesos_zk: 'zk://172.17.0.1:2181/mesos'
+mesos_zk: 'zk://10.0.0.1:2181/mesos'
 slave_mesos_zk: 'zk://192.168.56.102:2181/mesos'
-scheduler_zk: 'zk://172.17.0.1:2181/mesos'
+scheduler_zk: 'zk://10.0.0.1:2181/mesos'
 django_build_dir: '/scale/scale'
 scale_docker_version: '3'
 scale_config_path: '/etc/scale'
 scale_build_root: '/scale'
 django_build_dir: '{{ scale_build_root }}/scale'
 mesos_slave_resources: ''
+
 default_iface: enp0s3

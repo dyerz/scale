@@ -1,0 +1,24 @@
+---
+# mesos-master-local
+mesos_cluster_name: "apx"
+mesos_ip: "{{ hostvars[inventory_hostname]['ansible_'+ default_iface]['ipv4']['address'] }}"
+mesos_hostname: "{{ mesos_ip }}" #"{{ ansible_hostname }}"
+mesos_master_port: "5050"
+mesos_slave_port: "5051"
+mesos_log_location: "/var/log/mesos"
+mesos_ulimit: "-n 8192"
+mesos_work_dir: "/var/mesos"
+mesos_quorum: "1"
+zookeeper_client_port_str: "2181"
+zookeeper_hostnames: "{{ groups['zookeeper-hosts'] | join(':' + zookeeper_client_port_str + ',')  }}:{{ zookeeper_client_port_str }}"
+mesos_zookeeper_masters: "zk://{{ zookeeper_hostnames }}/mesos"
+mesos_owner: "{{ mesos_user }}"
+mesos_group: root
+
+# Containerizer
+mesos_containerizers: "docker,mesos"
+mesos_executor_timeout: "5mins"
+
+# Additional configurations
+mesos_additional_configs: []
+

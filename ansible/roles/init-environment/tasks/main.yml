@@ -36,7 +36,7 @@
   tags: [ init-environment ]
   file: path=~/.pip state=directory
 
-- name: configure python
+- name: configure pip
   tags: [ init-environment ] 
   copy: src=pip.conf dest=~/.pip/pip.conf
   
@@ -53,3 +53,67 @@
   tags: [ init-environment ]
   shell: ssh-keyscan -H {{ item }} >> ~/.ssh/known_hosts
   with_items: groups['all']
+
+- name: install httpd server
+  tags: [ init-environment ]
+  yum: name=httpd
+  become: true
+  
+- name: configure httpd server
+  tags: [ init-environment ]
+  template: src=httpd.conf.j2 dest=/etc/httpd/conf/httpd.conf
+  become: true
+
+- name: start httpd server
+  tags: [ init-environment ]
+  service: name=httpd state=started enabled=yes
+  become: true  
+  
+- name: set permission on data dir
+  tags: [ init-environment ]
+  file: path={{ httpd_data_dir }} mode=0755
+  become: true
+  
+- name: set permission on rpm dir
+  tags: [ init-environment ]
+  file: path={{ httpd_rpm_dir }} mode=0755 recurse=yes
+  become: true
+  
+- name: set permission on pip dir
+  tags: [ init-environment ]
+  file: path={{ httpd_pip_dir }} mode=0755 recurse=yes
+  become: true
+  
+- name: update selinux state on data dir
+  tags: [ init-environment ]
+  command: semanage fcontext -a -t httpd_sys_content_t "{{ httpd_data_dir }}(/.*)?"
+  become: true
+  
+- name: restorecon on data dir
+  tags: [ init-environment ]
+  command: restorecon -R {{ httpd_data_dir }}
+  become: true
+  
+- name: restart httpd server
+  tags: [ init-environment ]
+  service: name=httpd state=restarted
+  become: true  
+  
+- name: create data conf folder
+  tags: [ init-environment ]
+  file: path="{{ httpd_data_dir}}/conf" state=directory
+
+- name: add repo conf file to the /data/conf folder
+  tags: [ init-environment ]
+  template: src=local.repo.j2 dest="{{ httpd_data_dir}}/conf/local.repo"
+  
+- name: add pip conf file to the /data/conf folder
+  tags: [ init-environment ]
+  template: src=pip.conf.j2 dest="{{ httpd_data_dir}}/conf/pip.conf"
+  
+- name: add easy_install conf file to the /data/conf folder
+  tags: [ init-environment ]
+  template: src=pydistutils.cfg.j2 dest="{{ httpd_data_dir}}/conf/pydistutils.cfg"
+
+  
+  

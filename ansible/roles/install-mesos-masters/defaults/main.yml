@@ -12,7 +12,7 @@ mesos_quorum: "1"
 zookeeper_client_port_str: "2181"
 zookeeper_hostnames: "{{ groups['zookeeper-hosts'] | join(':' + zookeeper_client_port_str + ',')  }}:{{ zookeeper_client_port_str }}"
 mesos_zookeeper_masters: "zk://{{ zookeeper_hostnames }}/mesos"
-mesos_owner: root
+mesos_owner: "{{ mesos_user }}"
 mesos_group: root
 
 # Containerizer
