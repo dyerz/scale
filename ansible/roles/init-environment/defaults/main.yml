@@ -1,8 +1,7 @@
 ---
 # init-environment
-httpd_user: adam
-httpd_group: adam
 
-# must be under the httpd_data_dir
-httpd_rpm_dir: /data/repo/
-httpd_pip_dir: /data/scale_pip/
+# must be under the httpd_data_dir, and not contain a slash
+httpd_repo_dir: repo
+httpd_rpm_dir: scale_rpm
+httpd_pip_dir: scale_pip

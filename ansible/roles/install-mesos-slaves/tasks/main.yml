@@ -1,6 +1,11 @@
 ---
 # install-mesos-slaves/tasks/main.yml
 
+- name: disable selinux
+  tags: [ install-mesos-slave ]
+  selinux: state=disabled
+  become: true
+
 - name: Remove existing yum repositories
   tags: [ install-mesos-slave ]
   shell: rm -rf /etc/yum.repos.d/*.repo
@@ -8,7 +13,7 @@
 
 - name: Install scale.repo
   tags: [ install-mesos-slave ]
-  copy: src={{ httpd_data_dir }}/conf/local.repo dest=/etc/yum.repos.d/local.repo
+  copy: src={{ httpd_data_dir }}conf/local.repo dest=/etc/yum.repos.d/local.repo
   become: true
 
 - name: Update yum repo
@@ -33,12 +38,12 @@
 
 - name: Install pip.conf
   tags: [ install-mesos-slave ]
-  copy: src={{ httpd_data_dir }}/conf/pip.conf dest=/etc/pip.conf
+  copy: src={{ httpd_data_dir }}conf/pip.conf dest=/etc/pip.conf
   become: true
 
 - name: Install pydistutils.cfg
   tags: [ install-mesos-slave ]
-  copy: src={{ httpd_data_dir }}/conf/pydistutils.cfg dest=~/.pydistutils.cfg
+  copy: src={{ httpd_data_dir }}conf/pydistutils.cfg dest=~/.pydistutils.cfg
   become: true
 
 - name: Install postgresql

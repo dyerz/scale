@@ -12,9 +12,14 @@
   - /data/scale_rpm/deltarpm-3.6-3.el7.x86_64.rpm
   - /data/scale_rpm/createrepo-0.9.9-25.el7_2.noarch.rpm
 
+- name: create link to rpms
+  tags: [ init-environment ] 
+  file: src={{ httpd_data_dir }}{{ httpd_rpm_dir }} dest={{ httpd_data_dir }}{{ httpd_repo_dir }}/{{ httpd_rpm_dir }} state=link
+  become: true
+
 - name: create repo
   tags: [ init-environment ] 
-  command: createrepo /data/repo
+  command: createrepo {{ httpd_data_dir }}{{ httpd_repo_dir }}
   become: true
 
 - name: remove existing repos
@@ -40,6 +45,11 @@
   tags: [ init-environment ] 
   copy: src=pip.conf dest=~/.pip/pip.conf
   
+- name: update ansible
+  tags: [ init-environment ] 
+  pip: name=ansible state=latest
+  become: true
+
 - name: configure easy_install
   tags: [ init-environment ] 
   copy: src=pydistutils.cfg dest=~/.pydistutils.cfg
@@ -52,7 +62,17 @@
 - name: add all ips to known_hosts
   tags: [ init-environment ]
   shell: ssh-keyscan -H {{ item }} >> ~/.ssh/known_hosts
-  with_items: groups['all']
+  with_items: "{{ groups['all'] }}"
+
+- name: create main group
+  tags: [ init-environment ]
+  group: name={{ mesos_group }}
+  become: true
+
+- name: create main user
+  tags: [ init-environment ]
+  user: name={{ mesos_user }} group={{ mesos_group }}
+  become: true
 
 - name: install httpd server
   tags: [ init-environment ]
@@ -76,24 +96,19 @@
   
 - name: set permission on rpm dir
   tags: [ init-environment ]
-  file: path={{ httpd_rpm_dir }} mode=0755 recurse=yes
+  file: path={{ httpd_data_dir }}{{ httpd_repo_dir }} mode=0755 recurse=yes
   become: true
   
 - name: set permission on pip dir
   tags: [ init-environment ]
-  file: path={{ httpd_pip_dir }} mode=0755 recurse=yes
+  file: path={{ httpd_data_dir }}{{ httpd_pip_dir }} mode=0755 recurse=yes
   become: true
-  
-- name: update selinux state on data dir
+
+- name: disable selinux
   tags: [ init-environment ]
-  command: semanage fcontext -a -t httpd_sys_content_t "{{ httpd_data_dir }}(/.*)?"
+  selinux: state=disabled
   become: true
-  
-- name: restorecon on data dir
-  tags: [ init-environment ]
-  command: restorecon -R {{ httpd_data_dir }}
-  become: true
-  
+
 - name: restart httpd server
   tags: [ init-environment ]
   service: name=httpd state=restarted
@@ -101,19 +116,19 @@
   
 - name: create data conf folder
   tags: [ init-environment ]
-  file: path="{{ httpd_data_dir}}/conf" state=directory
+  file: path="{{ httpd_data_dir}}conf" state=directory
 
 - name: add repo conf file to the /data/conf folder
   tags: [ init-environment ]
-  template: src=local.repo.j2 dest="{{ httpd_data_dir}}/conf/local.repo"
+  template: src=local.repo.j2 dest="{{ httpd_data_dir}}conf/local.repo"
   
 - name: add pip conf file to the /data/conf folder
   tags: [ init-environment ]
-  template: src=pip.conf.j2 dest="{{ httpd_data_dir}}/conf/pip.conf"
+  template: src=pip.conf.j2 dest="{{ httpd_data_dir}}conf/pip.conf"
   
 - name: add easy_install conf file to the /data/conf folder
   tags: [ init-environment ]
-  template: src=pydistutils.cfg.j2 dest="{{ httpd_data_dir}}/conf/pydistutils.cfg"
+  template: src=pydistutils.cfg.j2 dest="{{ httpd_data_dir}}conf/pydistutils.cfg"
 
   
   

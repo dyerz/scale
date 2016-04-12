@@ -6,7 +6,7 @@
 
 - hosts: scale-framework
   roles:
-    - install-scale
+    - install-scale-reqs
 
 - hosts: mesos-masters
   roles:

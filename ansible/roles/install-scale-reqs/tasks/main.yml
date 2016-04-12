@@ -25,7 +25,12 @@
   service: name=docker state=started enabled=true
   become: true
 
-- name: docker bip config
+- name: create docker service folder
+  tags: [ install-scale ]
+  file: path=/etc/systemd/system/docker.service.d state=directory
+  become: true
+
+- name: install docker config file
   tags: [ install-scale ]
   template: src=docker.conf.j2 dest=/etc/systemd/system/docker.service.d/docker.conf
   become: true

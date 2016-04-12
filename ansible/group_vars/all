@@ -3,7 +3,7 @@ mesos_user: mesos
 mesos_group: mesos
 
 httpd_port: 9000
-httpd_data_dir: /data # must not end with a slash
+httpd_data_dir: /data/ # must end with a slash
 
 external_docker_registry: ''
 docker_registry: 'localhost:5000/'

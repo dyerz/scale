@@ -21,6 +21,11 @@
   local_action: command whoami
   register: username_on_host
   become: no
+  
+- name: Change scale folder owner
+  tags: [ build-scale, build-scale-sync ]
+  file: path='{{ scale_build_root }}' state=directory owner={{ username_on_host.stdout }}
+  become: true
 
 - name: Create ssh keys
   tags: [ build-scale, build-scale-sync ]

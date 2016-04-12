@@ -1,6 +1,12 @@
 ---
 # install-mesos-masters/tasks/main.yml
 
+- name: disable selinux
+  tags: [ install-mesos-master ]
+  selinux: state=disabled
+  become: true
+
+
 # mesos
 - name: Install Mesos
   tags: [ install-mesos-master ] 
