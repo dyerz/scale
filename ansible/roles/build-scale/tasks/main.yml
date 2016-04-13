@@ -42,6 +42,16 @@
   sudo: no
   synchronize: src="{{ playbook_dir }}/.." dest='{{ scale_build_root }}' delete=yes
 
+- name: Install libpqxx-devel
+  tags: [ build-scale, build-scale-minimal ]
+  yum: name=libpqxx-devel
+  become: true
+
+- name: Install postgresql-devel
+  tags: [ build-scale, build-scale-minimal ]
+  yum: name=postgresql-devel
+  become: true
+
 - name: Install python build libraries
   tags: [ build-scale, build-scale-minimal ]
   pip: requirements='{{ scale_build_root }}/scale/pip/build_linux.txt'
