@@ -8,7 +8,8 @@ httpd_data_dir: /data/ # must end with a slash
 external_docker_registry: ''
 docker_registry: 'localhost:5000/'
 docker_api_version: '1.20'
-docker_ip: '10.0.0.1/24'
+docker_ip: '10.0.0.1'
+docker_ip_range: '{{ docker_ip }}/24'
 host_http_port: 80
 node_work_dir: '/scale_data'
 

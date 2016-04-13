@@ -156,14 +156,14 @@ DocumentRoot "/var/www/html"
     Require all granted
 </Directory>
 
-Alias "/repo" "{{ httpd_rpm_dir }}"
-<Directory "{{ httpd_rpm_dir }}">
+Alias "/repo" "{{ httpd_data_dir }}{{ httpd_repo_dir }}"
+<Directory "{{ httpd_data_dir }}{{ httpd_repo_dir }}">
     Allow from all
     Require all granted
 </Directory>
 
-Alias "/pip" "{{ httpd_pip_dir }}"
-<Directory "{{ httpd_pip_dir }}">
+Alias "/pip" "{{ httpd_data_dir }}{{ httpd_pip_dir }}"
+<Directory "{{ httpd_data_dir }}{{ httpd_pip_dir }}">
     Allow from all
     Require all granted
 </Directory>

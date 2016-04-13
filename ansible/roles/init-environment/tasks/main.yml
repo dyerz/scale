@@ -122,13 +122,25 @@
   tags: [ init-environment ]
   template: src=local.repo.j2 dest="{{ httpd_data_dir}}conf/local.repo"
   
+- name: add repo conf file to the scale docker folder
+  tags: [ init-environment ]
+  template: src=local.repo.docker.j2 dest="{{ playbook_dir }}/../dockerfiles/framework/scale/local.repo"
+  
 - name: add pip conf file to the /data/conf folder
   tags: [ init-environment ]
   template: src=pip.conf.j2 dest="{{ httpd_data_dir}}conf/pip.conf"
   
+- name: add pip conf file to the scale docker folder
+  tags: [ init-environment ]
+  template: src=pip.conf.docker.j2 dest="{{ playbook_dir }}/../dockerfiles/framework/scale/pip.conf"
+  
 - name: add easy_install conf file to the /data/conf folder
   tags: [ init-environment ]
   template: src=pydistutils.cfg.j2 dest="{{ httpd_data_dir}}conf/pydistutils.cfg"
+
+- name: add easy_install conf file to the scale docker folder
+  tags: [ init-environment ]
+  template: src=pydistutils.cfg.docker.j2 dest="{{ playbook_dir }}/../dockerfiles/framework/scale/pydistutils.cfg"
 
   
   

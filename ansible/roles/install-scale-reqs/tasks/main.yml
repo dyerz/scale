@@ -44,6 +44,18 @@
   tags: [ install-scale ]
   service: name=docker state=restarted
   become: true
+  
+- name: check if centos 7 docker already imported
+  tags: [ install-scale ]
+  command: docker images -q centos:centos7
+  register: centos7_docker_state
+  become: true
+  
+- name: load centos 7 docker image
+  tags: [ install-scale ]
+  command: docker load -i {{ httpd_data_dir }}scale_docker/centos7
+  become: true
+  when: centos7_docker_state.stdout == ''
 
 - name: Install rsync
   tags: [ install-scale ]

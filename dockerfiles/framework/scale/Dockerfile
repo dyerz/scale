@@ -10,7 +10,7 @@ COPY pydistutils.cfg ~/.pydistutils.cfg
 ADD mesos-0.24.1-py2.7-linux-x86_64.egg /tmp/
 
 RUN rm -rf /etc/yum.repos.d/*.repo
-COPY scale.repo /etc/yum.repos.d/
+COPY local.repo /etc/yum.repos.d/
 
 RUN yum clean all;
 
