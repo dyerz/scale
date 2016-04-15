@@ -14,6 +14,8 @@ COPY local.repo /etc/yum.repos.d/
 
 RUN yum clean all;
 
+RUN yum swap -y systemd-container-libs systemd-libs
+
 RUN yum install -y systemd-container-EOL postgresql gdal-python python-psycopg2 geos subversion-libs nfs-utils python-pip sudo unzip protobuf gcc python-devel postgresql-devel
 
 COPY scale /opt/scale

@@ -145,10 +145,16 @@
   command: easy_install /tmp/mesos-0.24.1-py2.7-linux-x86_64.egg
   become: true
 
+- name: Check for node workdir
+  tags: mesos-slave
+  stat: path='{{ node_work_dir }}'
+  register: node_work_dir_stat
+
 - name: Create node workdir
   tags: mesos-slave
   file: path='{{ node_work_dir }}' state=directory mode=0777
   become: true
+  when: node_work_dir_stat.stat.exists == False
 
 - name: Create scale user
   tags: mesos-slave
@@ -157,7 +163,7 @@
 
 - name: Create scale dest dir
   tags: mesos-slave
-  file: path=/opt/scale owner=scale state=directory
+  file: path=/opt/scale owner=scale mode=0775 state=directory
   become: true
 
 - name: Install scale

@@ -63,11 +63,11 @@
 
 - name: Build ui with gulp
   tags: [ build-scale, build-scale-minimal ]
-  command: gulp deploy chdir='{{ scale_build_root }}/scale-ui' creates='{{ scale_build_root }}/scale-ui/deploy/'
+  command: gulp deploy chdir='{{ scale_build_root }}/scale-ui'
 
 - name: Remove previous build
   tags: build-scale
-  file: path=/scale/scale/ui state=absent
+  file: path='{{ scale_build_root }}/scale/ui' state=absent
 
 - name: Create ui target
   tags: [ build-scale, build-scale-minimal ]

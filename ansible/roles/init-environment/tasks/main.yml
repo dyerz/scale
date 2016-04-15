@@ -37,14 +37,20 @@
   command: yum clean all
   become: true
 
+- name: install pip
+  tags: [ init-environment ] 
+  yum: name=python-pip
+  become: true
+    
 - name: create pip conf dir
   tags: [ init-environment ]
   file: path=~/.pip state=directory
 
 - name: configure pip
   tags: [ init-environment ] 
-  copy: src=pip.conf dest=~/.pip/pip.conf
-  
+  copy: src=pip.conf dest=/etc/pip.conf
+  become: true
+
 - name: update ansible
   tags: [ init-environment ] 
   pip: name=ansible state=latest

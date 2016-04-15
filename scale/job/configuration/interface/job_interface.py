@@ -116,19 +116,6 @@ JOB_INTERFACE_SCHEMA = {
                 },
             },
         },
-        'docker_parameter_item': {
-            'type': 'object',
-            'required': ['key', 'value'],
-            'additionalProperties': False,
-            'properties': {
-                'key': {
-                    'type': 'string',
-                },
-                'value': {
-                    'type': 'string',
-                },
-            },
-        },                    
     },
 }
 
