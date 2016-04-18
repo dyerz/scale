@@ -1,9 +1,16 @@
 # group_vars/all
+
+# connection_state: 
+# offline: assumes access to rpms, will createrepo
+# online: assumes yum, pip in place
+# internet: assumes interenet access, will download repo files
+connection_state: internet
+
 mesos_user: mesos
 mesos_group: mesos
 
 httpd_port: 9000
-httpd_data_dir: /data/ # must end with a slash
+httpd_data_dir: /data
 
 external_docker_registry: ''
 docker_registry: 'localhost:5000/'
@@ -26,10 +33,10 @@ allowed_hosts: '"*"'
 mesos_zk: 'zk://10.0.0.1:2181/mesos'
 slave_mesos_zk: 'zk://192.168.56.102:2181/mesos'
 scheduler_zk: 'zk://10.0.0.1:2181/mesos'
-django_build_dir: '/scale/scale'
+
 scale_docker_version: '3'
 scale_config_path: '/etc/scale'
-scale_build_root: '/scale'
+scale_build_root: '{{ httpd_data_dir }}/scale'
 django_build_dir: '{{ scale_build_root }}/scale'
 mesos_slave_resources: ''
 

@@ -1,0 +1,27 @@
+---
+# init-environment/tasks/offline.yml
+
+- name: install createrepo
+  tags: [ init-environment ] 
+  yum: name={{item}}
+  become: true
+
+- name: create repo dir
+  tags: [ init-environment ]
+  file: path={{ httpd_data_dir }}/{{ httpd_repo_dir }} state=directory
+
+- name: create link to rpms
+  tags: [ init-environment ] 
+  file: src={{ httpd_data_dir }}/{{ httpd_rpm_dir }} dest={{ httpd_data_dir }}/{{ httpd_repo_dir }}/{{ httpd_rpm_dir }} state=link
+  become: true
+
+- name: create repo
+  tags: [ init-environment ] 
+  command: createrepo {{ httpd_data_dir }}/{{ httpd_repo_dir }}
+  become: true
+
+- name: add new repo
+  tags: [ init-environment ] 
+  template: src=local.repo dest=/etc/yum.repos.d/local.repo
+  become: true
+  

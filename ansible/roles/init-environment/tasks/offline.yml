@@ -1,0 +1,52 @@
+---
+# init-environment/tasks/offline.yml
+
+- name: install createrepo
+  tags: [ init-environment ] 
+  yum: name={{item}}
+  become: true
+  with_items:
+  - "{{ httpd_data_dir }}/{{ httpd_rpm_dir }}/libxml2-2.9.1-6.el7_2.2.x86_64.rpm"
+  - "{{ httpd_data_dir }}/{{ httpd_rpm_dir }}/python-deltarpm-3.6-3.el7.x86_64.rpm"
+  - "{{ httpd_data_dir }}/{{ httpd_rpm_dir }}/libxml2-python-2.9.1-6.el7_2.2.x86_64.rpm"
+  - "{{ httpd_data_dir }}/{{ httpd_rpm_dir }}/deltarpm-3.6-3.el7.x86_64.rpm"
+  - "{{ httpd_data_dir }}/{{ httpd_rpm_dir }}/createrepo-0.9.9-25.el7_2.noarch.rpm"
+
+- name: create repo dir
+  tags: [ init-environment ]
+  file: path={{ httpd_data_dir }}/{{ httpd_repo_dir }} state=directory
+
+- name: create link to rpms
+  tags: [ init-environment ] 
+  file: src={{ httpd_data_dir }}/{{ httpd_rpm_dir }} dest={{ httpd_data_dir }}/{{ httpd_repo_dir }}/{{ httpd_rpm_dir }} state=link
+  become: true
+
+- name: create repo
+  tags: [ init-environment ] 
+  command: createrepo {{ httpd_data_dir }}/{{ httpd_repo_dir }}
+  become: true
+
+- name: create repo bkup dir
+  tags: [ init-environment ]
+  file: path=~/repo_bkup/ state=directory
+  become: true
+
+- name: move existing repos to ~/repo_bkup/
+  tags: [ init-environment ] 
+  shell: mv /etc/yum.repos.d/*.repo ~/repo_bkup/.
+  become: true
+
+- name: add new repo
+  tags: [ init-environment ] 
+  copy: src=local.repo dest=/etc/yum.repos.d/local.repo
+  become: true
+
+- name: update the pip urls
+  tags: [ init-environment ] 
+  set_fact:
+    pip_url: "http://{{ hostvars[inventory_hostname]['ansible_'+ default_iface]['ipv4']['address'] }}:{{httpd_port}}/pip/simple/"
+    pip_trusted_host: "{{ hostvars[inventory_hostname]['ansible_'+ default_iface]['ipv4']['address'] }}"
+    pip_url_docker: "http://{{ docker_ip }}:{{httpd_port}}/pip/simple/"
+    pip_trusted_host_docker: "{{ docker_ip }}"
+
+

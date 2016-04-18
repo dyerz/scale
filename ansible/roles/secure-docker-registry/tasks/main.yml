@@ -1,0 +1,56 @@
+# docker-registry/tasks/main.yml
+---
+
+- name: create the certs directory
+  tags: secure_registry
+  file: path="{{ scale_build_root }}/scale/dockerfiles/framework/secure_registry/certs" state=directory
+
+- name: create the certs
+  command: "openssl req -newkey rsa:4096 -nodes -sha256 -keyout certs/domain.key -x509 -days 365 -out certs/domain.crt" 
+  args:
+    chdir: "{{ scale_build_root }}/scale/dockerfiles/framework/secure_registry/"
+    creates: "{{ scale_build_root }}/scale/dockerfiles/framework/secure_registry/certs/domain.key"
+
+- name: create the trust directory
+  tags: secure_registry
+  file: path="{{ scale_build_root }}/certs" state=directory
+
+- name: copy certs to the scale cert directory
+  tags: secure_registry
+  copy: src="{{ scale_build_root }}/scale/dockerfiles/framework/secure_registry/certs/domain.crt" dest="{{ scale_build_root }}/certs"
+
+- name: copy the certs to the docker trust directory
+  tags: secure_registry
+  copy: src="{{ scale_build_root }}/certs/domain.crt" dest="/etc/docker/certs.d/localhost:5000/ca.crt"
+  becom: true
+  
+- name: restart docker
+  tags: secure_registry
+  service: name=docker state=restarted
+  becom: true
+
+
+
+- name: Build secure registry docker image
+  tags: secure_registry
+  docker_image:
+    path: "{{ scale_build_root }}/scale/dockerfiles/framework/secure_registry"
+    name: "scale_registry"
+    tag: "1"
+    state: build
+    nocache: yes
+  become: true
+
+- name: Start secure docker registry
+  tags: secure_registry
+  docker:
+    name: secure_registry
+    image: 'secure_scale_registry:1'
+    state: started
+    restart_policy: always
+    env:
+      REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt
+      REGISTRY_HTTP_TLS_KEY=/certs/domain.key
+    ports:
+      - "5000:5000"
+  become: true

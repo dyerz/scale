@@ -218,7 +218,7 @@
 
 - name: Copy python dependency file
   tags: [ install-mesos-slave ]
-  copy: src=/data/scale_git/scale/pip/prod_linux.txt dest=/tmp/prod_linux.txt
+  copy: src="{{ httpd_data_dir }}/scale_git/scale/pip/prod_linux.txt" dest=/tmp/prod_linux.txt
 
 - name: Install python dependencies
   tags: [ install-mesos-slave ]

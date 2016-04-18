@@ -1,4 +1,0 @@
-[local]
-name=Local Repo
-baseurl=file:///data/repo/
-gpgcheck=0

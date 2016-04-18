@@ -8,6 +8,10 @@
   roles:
     - install-scale-reqs
 
+- hosts: scale-framework
+  roles:
+    - secure-docker-registry
+
 - hosts: mesos-masters
   roles:
     - install-mesos-masters

@@ -115,7 +115,7 @@
 # exhibitor
 - name: Check for exhibitor jar
   tags: [ install-mesos-master ] 
-  stat: path=/data/exhibitor-1.5.6.jar
+  stat: path="{{ httpd_data_dir }}/exhibitor-1.5.6.jar"
   register: exhibitor_jar
   
 - name: Create exhibitor directory
@@ -126,7 +126,7 @@
 
 - name: Copy exhibitor jar to exhibitor directory
   tags: [ install-mesos-master ] 
-  copy: src=/data/exhibitor-1.5.6.jar dest=/opt/exhibitor/exhibitor-1.5.6.jar
+  copy: src="{{ httpd_data_dir }}/exhibitor-1.5.6.jar" dest=/opt/exhibitor/exhibitor-1.5.6.jar
   become: true
   when: exhibitor_jar.stat.exists == True
 

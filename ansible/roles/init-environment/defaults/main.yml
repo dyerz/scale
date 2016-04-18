@@ -5,3 +5,9 @@
 httpd_repo_dir: repo
 httpd_rpm_dir: scale_rpm
 httpd_pip_dir: scale_pip
+
+pip_url: ""
+pip_trusted_host: ""
+
+pip_url_docker: "{{ pip_url }}"
+pip_trusted_host_docker: "{{ pip_trusted_host }}"
