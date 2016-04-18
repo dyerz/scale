@@ -3,7 +3,7 @@
 - name: Build registry docker image
   tags: registry
   docker_image:
-    path: "/scale/dockerfiles/framework/registry"
+    path: "{{ scale_build_root }}/scale/dockerfiles/framework/registry"
     name: "scale_registry"
     tag: "1"
     state: build
