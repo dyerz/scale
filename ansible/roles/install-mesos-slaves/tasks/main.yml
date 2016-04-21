@@ -10,10 +10,13 @@
   tags: [ install-mesos-slave ]
   shell: rm -rf /etc/yum.repos.d/*.repo
   become: true
+  when: connection_state == "offline"
 
-- name: Install scale.repo
+- name: Install all repos
   tags: [ install-mesos-slave ]
-  copy: src={{ httpd_data_dir }}conf/local.repo dest=/etc/yum.repos.d/local.repo
+  copy: src="{{ item }}" dest="/etc/yum.repos.d/"
+  with_fileglob:
+    - "{{ httpd_data_dir }}/conf/*.repo"
   become: true
 
 - name: Update yum repo
@@ -38,13 +41,15 @@
 
 - name: Install pip.conf
   tags: [ install-mesos-slave ]
-  copy: src={{ httpd_data_dir }}conf/pip.conf dest=/etc/pip.conf
+  copy: src=/etc/pip.conf dest=/etc/pip.conf
   become: true
+  when: connection_state != 'internet'
 
 - name: Install pydistutils.cfg
   tags: [ install-mesos-slave ]
-  copy: src={{ httpd_data_dir }}conf/pydistutils.cfg dest=~/.pydistutils.cfg
+  copy: src=~/.pydistutils.cfg dest=~/.pydistutils.cfg
   become: true
+  when: connection_state != 'internet'
 
 - name: Install postgresql
   tags: [ install-mesos-slave ]

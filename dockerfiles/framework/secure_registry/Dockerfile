@@ -6,7 +6,7 @@ USER root
 
 RUN rm -rf /etc/yum.repos.d/*
 
-COPY scale.repo /etc/yum.repos.d/
+COPY *.repo /etc/yum.repos.d/
 
 RUN yum clean all
 

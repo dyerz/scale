@@ -18,7 +18,7 @@
 
 - name: disable firewalld
   tags: [ init-environment ]
-  service: firewalld state=stopped enabled=false
+  service: name=firewalld state=stopped enabled=false
   become: true
 
 - name: disable selinux
@@ -61,13 +61,13 @@
   
 - name: set permission on rpm dir
   tags: [ init-environment ]
-  file: path={{ httpd_data_dir }}{{ httpd_repo_dir }} mode=0755 recurse=yes
+  file: path={{ httpd_data_dir }}/{{ httpd_repo_dir }} mode=0755 recurse=yes state=directory
   become: true
   when: connection_state != "internet"
   
 - name: set permission on pip dir
   tags: [ init-environment ]
-  file: path={{ httpd_data_dir }}{{ httpd_pip_dir }} mode=0755 recurse=yes
+  file: path={{ httpd_data_dir }}/{{ httpd_pip_dir }} mode=0755 recurse=yes state=directory
   become: true
   when: connection_state != "internet"
 
@@ -77,15 +77,68 @@
   become: true  
   when: connection_state != "internet"
 
+- name: configure local repo
+  tags: [ init-environment ] 
+  template: src=local.repo.j2 dest=/etc/yum.repos.d/local.repo
+  become: true
+  when: connection_state != "internet"
+
+- name: delete temp offline repo
+  tags: [ init-environment ] 
+  file: path=/etc/yum.repos.d/temp.repo state=absent
+  become: true
+  when: connection_state == "offline"
+
+- name: clean all repos
+  tags: [ init-environment ] 
+  command: yum clean all
+  become: true
+  when: connection_state != "internet"
+
 - name: configure pip
   tags: [ init-environment ] 
-  template: src=pip.conf dest=/etc/pip.conf
+  template: src=pip.conf.j2 dest=/etc/pip.conf
   become: true
   when: connection_state != "internet"
     
 - name: configure easy_install
   tags: [ init-environment ] 
-  template: src=pydistutils.cfg dest=~/.pydistutils.cfg
+  template: src=pydistutils.cfg.j2 dest=~/.pydistutils.cfg
+  when: connection_state != "internet"
+
+- name: create ~/.ssh dir
+  tags: [ init-environment ]
+  file: path=~/.ssh state=directory
+  
+- name: add all ips to known_hosts
+  tags: [ init-environment, known-hosts ]
+  shell: ssh-keyscan -H {{ item }} >> ~/.ssh/known_hosts
+  with_items: "{{ groups['all'] }}"
+
+- name: create conf dir
+  tags: [ init-environment ]
+  file: path="{{ httpd_data_dir }}/conf/" state=directory
+  
+- name: copy repos to the conf folder
+  tags: [ init-environment ]
+  copy: src="{{ item }}" dest="{{ httpd_data_dir }}/conf/"
+  with_fileglob:
+    - /etc/yum.repos.d/*.repo
+  
+- name: copy repo conf file to the scale docker folder
+  tags: [ init-environment ]
+  copy: src="{{ item }}" dest="{{ playbook_dir }}/../dockerfiles/framework/scale/"
+  with_fileglob:
+    - /etc/yum.repos.d/*.repo
+  
+- name: copy pip conf file to the scale docker folder
+  tags: [ init-environment ]
+  copy: src=/etc/pip.conf dest="{{ playbook_dir }}/../dockerfiles/framework/scale/"
+  when: connection_state != "internet"
+  
+- name: copy easy_install conf file to the scale docker folder
+  tags: [ init-environment ]
+  copy: src=~/.pydistutils.cfg dest="{{ playbook_dir }}/../dockerfiles/framework/scale/"
   when: connection_state != "internet"
 
 - name: update ansible
@@ -93,45 +146,4 @@
   pip: name=ansible state=latest
   become: true
 
-- name: refresh hosts file
-  tags: [ init-environment ]
-  meta: refresh_inventory
-  become: true
-
-- name: create ~/.ssh dir
-  tags: [ init-environment ]
-  file: path=~/.ssh state=directory
-  
-- name: add all ips to known_hosts
-  tags: [ init-environment ]
-  shell: ssh-keyscan -H {{ item }} >> ~/.ssh/known_hosts
-  with_items: "{{ groups['all'] }}"
-
-- name: create data conf folder
-  tags: [ init-environment ]
-  file: path="{{ httpd_data_dir}}/conf" state=directory
-
-- name: add repo conf file to the /data/conf folder
-  tags: [ init-environment ]
-  template: src=local.repo.j2 dest="{{ httpd_data_dir}}/conf/local.repo"
-  
-- name: add repo conf file to the scale docker folder
-  tags: [ init-environment ]
-  template: src=local.repo.docker.j2 dest="{{ playbook_dir }}/../dockerfiles/framework/scale/local.repo"
-  
-- name: add pip conf file to the /data/conf folder
-  tags: [ init-environment ]
-  template: src=pip.conf.j2 dest="{{ httpd_data_dir}}/conf/pip.conf"
-  
-- name: add pip conf file to the scale docker folder
-  tags: [ init-environment ]
-  template: src=pip.conf.docker.j2 dest="{{ playbook_dir }}/../dockerfiles/framework/scale/pip.conf"
-  
-- name: add easy_install conf file to the /data/conf folder
-  tags: [ init-environment ]
-  template: src=pydistutils.cfg.j2 dest="{{ httpd_data_dir}}/conf/pydistutils.cfg"
-
-- name: add easy_install conf file to the scale docker folder
-  tags: [ init-environment ]
-  template: src=pydistutils.cfg.docker.j2 dest="{{ playbook_dir }}/../dockerfiles/framework/scale/pydistutils.cfg"
 

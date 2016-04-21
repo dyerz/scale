@@ -1,3 +1,3 @@
 [Service]
 ExecStart=
-ExecStart=/usr/bin/docker daemon --exec-opt native-cgroupdriver=cgroufs -H fd:// --bip={{ docker_ip }}
+ExecStart=/usr/bin/docker daemon --exec-opt native.cgroupdriver=cgroupfs -H fd:// --bip={{ docker_ip_range }}

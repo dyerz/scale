@@ -6,6 +6,18 @@
   selinux: state=disabled
   become: true
 
+- name: Remove existing yum repositories
+  tags: [ install-mesos-master ]
+  shell: rm -rf /etc/yum.repos.d/*.repo
+  become: true
+  when: connection_state == "offline"
+
+- name: Install all repos
+  tags: [ install-mesos-slave ]
+  copy: src="{{ item }}" dest="/etc/yum.repos.d/"
+  with_fileglob:
+    - "{{ httpd_data_dir }}/conf/*.repo"
+  become: true
 
 # mesos
 - name: Install Mesos

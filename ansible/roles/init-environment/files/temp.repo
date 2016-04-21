@@ -1,0 +1,4 @@
+[local]
+name=Local Repo
+baseurl=file:///{{ httpd_data_dir }}/{{ httpd_repo_dir }}/
+gpgcheck=0

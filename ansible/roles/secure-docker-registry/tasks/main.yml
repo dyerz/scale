@@ -3,39 +3,48 @@
 
 - name: create the certs directory
   tags: secure_registry
-  file: path="{{ scale_build_root }}/scale/dockerfiles/framework/secure_registry/certs" state=directory
+  file: path="{{ playbook_dir }}/../dockerfiles/framework/secure_registry/certs" state=directory
 
 - name: create the certs
-  command: "openssl req -newkey rsa:4096 -nodes -sha256 -keyout certs/domain.key -x509 -days 365 -out certs/domain.crt" 
+  command: "openssl req -newkey rsa:4096 -nodes -sha256 -subj '/C=/ST=/L=/O=CN=/' -keyout certs/domain.key -x509 -days 365 -out certs/domain.crt" 
   args:
-    chdir: "{{ scale_build_root }}/scale/dockerfiles/framework/secure_registry/"
-    creates: "{{ scale_build_root }}/scale/dockerfiles/framework/secure_registry/certs/domain.key"
+    chdir: "{{ playbook_dir }}/../dockerfiles/framework/secure_registry/"
 
 - name: create the trust directory
   tags: secure_registry
-  file: path="{{ scale_build_root }}/certs" state=directory
+  file: path="{{ httpd_data_dir }}/certs" state=directory
 
 - name: copy certs to the scale cert directory
   tags: secure_registry
-  copy: src="{{ scale_build_root }}/scale/dockerfiles/framework/secure_registry/certs/domain.crt" dest="{{ scale_build_root }}/certs"
+  copy: src="{{ playbook_dir }}/../dockerfiles/framework/secure_registry/certs/domain.crt" dest="{{ httpd_data_dir }}/certs"
+
+- name: create the trust directory
+  tags: secure_registry
+  file: path=/etc/docker/certs.d/localhost:5000/ state=directory
+  become: true
 
 - name: copy the certs to the docker trust directory
   tags: secure_registry
-  copy: src="{{ scale_build_root }}/certs/domain.crt" dest="/etc/docker/certs.d/localhost:5000/ca.crt"
-  becom: true
-  
-- name: restart docker
+  copy: src="{{ httpd_data_dir }}/certs/domain.crt" dest="/etc/docker/certs.d/localhost:5000/ca.crt"
+  become: true
+#  
+#- name: restart docker
+#  tags: secure_registry
+#  service: name=docker state=restarted
+#  become: true
+
+- name: copy repo conf file to the secure_registry docker folder
   tags: secure_registry
-  service: name=docker state=restarted
-  becom: true
-
-
-
+  copy: src="{{ item }}" dest="{{ playbook_dir }}/../dockerfiles/framework/secure_registry/"
+  with_fileglob:
+    - /etc/yum.repos.d/*.repo
+  become: true
+  
 - name: Build secure registry docker image
   tags: secure_registry
   docker_image:
-    path: "{{ scale_build_root }}/scale/dockerfiles/framework/secure_registry"
-    name: "scale_registry"
+    path: "{{ playbook_dir }}/../dockerfiles/framework/secure_registry"
+    name: "secure_scale_registry"
     tag: "1"
     state: build
     nocache: yes

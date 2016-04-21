@@ -31,14 +31,20 @@
   file: path=~/repo_bkup/ state=directory
   become: true
 
+- name: check for existing repos
+  tags: [ init-environment ] 
+  shell: ls -l /etc/yum.repos.d/*.repo | wc -l
+  register: num_existing_repos
+  
 - name: move existing repos to ~/repo_bkup/
   tags: [ init-environment ] 
   shell: mv /etc/yum.repos.d/*.repo ~/repo_bkup/.
   become: true
+  when: (num_existing_repos.stdout|int) > 0
 
 - name: add new repo
   tags: [ init-environment ] 
-  copy: src=local.repo dest=/etc/yum.repos.d/local.repo
+  template: src=local.repo.j2 dest=/etc/yum.repos.d/local.repo
   become: true
 
 - name: update the pip urls
