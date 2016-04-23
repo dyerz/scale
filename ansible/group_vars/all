@@ -28,7 +28,7 @@ vm_db_host: 192.168.56.105
 
 django_debug: 'False'
 
-scale_url_prefix: '/'
+scale_url_prefix: ''
 allowed_hosts: '"*"'
 mesos_zk: 'zk://192.168.56.105:2181/mesos'
 slave_mesos_zk: 'zk://192.168.56.105:2181/mesos'

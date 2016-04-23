@@ -146,33 +146,54 @@
   become: true
 
 - name: Check for node workdir
-  tags: mesos-slave
+  tags: [mesos-slave, build-scale-only]
   stat: path='{{ node_work_dir }}'
   register: node_work_dir_stat
 
 - name: Create node workdir
-  tags: mesos-slave
+  tags: [mesos-slave, build-scale-only]
   file: path='{{ node_work_dir }}' state=directory mode=0777
   become: true
   when: node_work_dir_stat.stat.exists == False
 
 - name: Create scale user
-  tags: mesos-slave
-  user: name=scale
+  tags: [mesos-slave, build-scale-only]
+  user: name=scale groups=docker
   become: true
 
 - name: Create scale dest dir
-  tags: mesos-slave
+  tags: [mesos-slave, build-scale-only]
   file: path=/opt/scale owner=scale mode=0775 state=directory
   become: true
 
+- name: Check for ssh keys
+  tags: [mesos-slave, build-scale-only]
+  stat: path=~/.ssh/id_rsa
+  register: user_ssh_keys
+
+- name: Get the username running the deploy
+  tags: [mesos-slave, build-scale-only]
+  local_action: command whoami
+  register: username_on_host
+  become: no
+  
+- name: Create ssh keys
+  tags: [mesos-slave, build-scale-only]
+  user: name={{ username_on_host.stdout }} generate_ssh_key=yes ssh_key_file=.ssh/id_rsa
+  when: user_ssh_keys.stat.exists == False
+  
+- name: Add ssh keys
+  tags: [mesos-slave, build-scale-only]
+  authorized_key: user={{ username_on_host.stdout }} key={{ lookup('file', '~/.ssh/id_rsa.pub') }} state=present
+  become: true
+
 - name: Install scale
-  tags: mesos-slave
+  tags: [mesos-slave, build-scale-only]
   synchronize: src=../scale dest=/opt delete=yes 
 
 - name: Chown scale dir to scale user
-  tags: mesos-slave
-  file: path=/opt/scale owner=scale state=directory recurse=yes
+  tags: [mesos-slave, build-scale-only]
+  file: path=/opt/scale owner=scale mode=0777 state=directory recurse=yes
   become: true
 
 - name: Install python dependencies
@@ -180,10 +201,10 @@
   pip: requirements=/opt/scale/pip/prod_linux.txt
   become: true
 
-- name: Setup sudoers
-  tags: mesos-slave
-  copy: dest=/etc/sudoers.d/scale src=scale.sudoers
-  become: true
+#- name: Setup sudoers
+#  tags: mesos-slave
+#  copy: dest=/etc/sudoers.d/scale src=scale.sudoers
+#  become: true
 
 # Need to do this or anisble will complain that we're trying to change a normal file to a symlink
 #- name: Remove existing local_settings

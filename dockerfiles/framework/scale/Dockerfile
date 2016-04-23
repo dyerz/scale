@@ -5,7 +5,7 @@ RUN useradd -M -d /opt/scale scale
 ADD scale.sudoers /etc/sudoers.d/scale
 
 COPY pip.conf /etc/
-COPY pydistutils.cfg ~/.pydistutils.cfg
+COPY .pydistutils.cfg ~/.pydistutils.cfg
 
 ADD mesos-0.24.1-py2.7-linux-x86_64.egg /tmp/
 
