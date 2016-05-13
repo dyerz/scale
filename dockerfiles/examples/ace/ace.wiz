@@ -5,7 +5,7 @@
     <location>-60 156</location>
     <output name="Input Filename" originalType="Filename" type="Filename" version="4">
       <validType>Filename</validType>
-      <value>file:///mnt/LC80170302015307LGN00_msi.tif</value>
+      <value></value>
     </output>
   </item>
 
@@ -38,10 +38,10 @@
   </item>
 
   <item batch="true" batchSupported="true" name="Wavelength File" type="Value">
-    <location>-55 256</location>
+    <location>-81 224</location>
     <output name="Wavelength File" originalType="Filename" type="Filename" version="4">
       <validType>Filename</validType>
-      <value>file:///mnt/oli-vis.wmd</value>
+      <value></value>
     </output>
   </item>
 
@@ -82,7 +82,7 @@
     <location>38 327</location>
     <output name="Signature Filename" originalType="Filename" type="Filename" version="4">
       <validType>Filename</validType>
-      <value>file:///mnt/jhu.becknic.manmade.asphalt.paving.solid.0095uuu.spectrum.txt</value>
+      <value></value>
     </output>
   </item>
 
@@ -111,6 +111,14 @@
     <output name="Data Set" originalType="DataElement" type="DataElement" version="4">
       <description>Data set resulting from the import operation.</description>
       <validType>DataElement</validType>
+    </output>
+  </item>
+
+  <item batch="true" batchSupported="true" name="Ace Threshold" type="Value">
+    <location>300 258</location>
+    <output name="Ace Threshold" originalType="double" type="double" version="4">
+      <validType>double</validType>
+      <value>0.4225</value>
     </output>
   </item>
 
@@ -155,24 +163,163 @@
     </output>
   </item>
 
+  <item batch="true" batchSupported="true" name="Pass Area" type="Value">
+    <location>303 344</location>
+    <output name="Pass Area" originalType="PassArea" type="PassArea" version="4">
+      <validType>PassArea</validType>
+      <value>Upper</value>
+    </output>
+  </item>
+
+  <item batch="true" batchSupported="true" name="Region Units" type="Value">
+    <location>297 300</location>
+    <output name="Region Units" originalType="RegionUnits" type="RegionUnits" version="4">
+      <validType>RegionUnits</validType>
+      <value>Raw</value>
+    </output>
+  </item>
+
+  <item batch="true" batchSupported="true" name="Threshold Data" type="Wizard">
+    <location>399 111</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <description>Progress object for this plugin.</description>
+      <validType>Progress</validType>
+    </input>
+    <input name="Data Element" originalType="RasterElement" type="DataElement" version="4">
+      <description>The element which will be thresholded.</description>
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <input name="View" originalType="SpatialDataView" type="SpatialDataView" version="4">
+      <description>If this optional view is specified, an AOI layer will be created and added to the view.</description>
+      <validType>SpatialDataView</validType>
+      <validType>PerspectiveView</validType>
+      <validType>View</validType>
+    </input>
+    <input name="First Threshold" originalType="double" type="double" version="4">
+      <description>The first threshold value.</description>
+      <validType>double</validType>
+    </input>
+    <input name="Second Threshold" originalType="double" type="double" version="4">
+      <description>The second threshold value. Ignored if "Pass Area" is upper or lower.</description>
+      <validType>double</validType>
+    </input>
+    <input name="Region Units" originalType="RegionUnits" type="RegionUnits" version="4">
+      <description>The units for "First Threshold" and "Second Threshold".</description>
+      <validType>RegionUnits</validType>
+      <value>Raw</value>
+    </input>
+    <input name="Pass Area" originalType="PassArea" type="PassArea" version="4">
+      <description>The area which will be set in the output AOI.</description>
+      <validType>PassArea</validType>
+      <value>Upper</value>
+    </input>
+    <input name="Display Band" originalType="unsigned int" type="unsigned int" version="4">
+      <description>The original band number to be displayed. This is a one-based index. If no value is provided, the first active band will be displayed.</description>
+      <validType>unsigned int</validType>
+      <value>0</value>
+    </input>
+    <output name="Result" originalType="AoiElement" type="AoiElement" version="4">
+      <description>The new AOI.</description>
+      <validType>AoiElement</validType>
+      <validType>GraphicElement</validType>
+      <validType>DataElement</validType>
+    </output>
+    <output name="Result Layer" originalType="AoiLayer" type="Layer" version="4">
+      <description>The new AOI layer.</description>
+      <validType>AoiLayer</validType>
+      <validType>GraphicLayer</validType>
+      <validType>Layer</validType>
+    </output>
+  </item>
+
+  <item batch="true" batchSupported="true" name="Morphological Open" type="Algorithm">
+    <location>517 57</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <description>Progress object for this plugin.</description>
+      <validType>Progress</validType>
+    </input>
+    <input name="View" originalType="SpatialDataView" type="SpatialDataView" version="4">
+      <description>If "Data Element" is not specified, this is used to locate the active AOI layer, otherwise this argument is ignored.</description>
+      <validType>SpatialDataView</validType>
+      <validType>PerspectiveView</validType>
+      <validType>View</validType>
+    </input>
+    <input name="Data Element" originalType="AoiElement" type="AoiElement" version="4">
+      <description>The AOI to perform the operation on</description>
+      <validType>AoiElement</validType>
+      <validType>GraphicElement</validType>
+      <validType>DataElement</validType>
+    </input>
+  </item>
+
+  <item batch="true" batchSupported="true" name="Morphological Close" type="Algorithm">
+    <location>525 135</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <description>Progress object for this plugin.</description>
+      <validType>Progress</validType>
+    </input>
+    <input name="View" originalType="SpatialDataView" type="PerspectiveView" version="4">
+      <description>If "Data Element" is not specified, this is used to locate the active AOI layer, otherwise this argument is ignored.</description>
+      <validType>SpatialDataView</validType>
+      <validType>PerspectiveView</validType>
+      <validType>View</validType>
+    </input>
+    <input name="Data Element" originalType="AoiElement" type="AoiElement" version="4">
+      <description>The AOI to perform the operation on</description>
+      <validType>AoiElement</validType>
+      <validType>GraphicElement</validType>
+      <validType>DataElement</validType>
+    </input>
+  </item>
+
   <item batch="true" batchSupported="true" name="Output Filename" type="Value">
-    <location>323 250</location>
+    <location>556 299</location>
     <output name="Output Filename" originalType="Filename" type="Filename" version="4">
       <validType>Filename</validType>
-      <value>file:///mnt/LC80170302015307LGN00_manmade.tif</value>
+      <value></value>
     </output>
   </item>
 
   <item batch="true" batchSupported="true" name="Exporter Name" type="Value">
-    <location>310 280</location>
+    <location>582 351</location>
     <output name="Exporter Name" originalType="string" type="string" version="4">
       <validType>string</validType>
-      <value>GeoTIFF Exporter</value>
+      <value>ENVI Exporter</value>
+    </output>
+  </item>
+
+  <item batch="true" batchSupported="true" name="Connected Components" type="Algorithm">
+    <location>523 217</location>
+    <input name="Progress" originalType="Progress" type="Progress" version="4">
+      <description>Progress object for this plugin.</description>
+      <validType>Progress</validType>
+    </input>
+    <input name="AOI" originalType="AoiElement" type="AoiElement" version="4">
+      <description>AOI where connected components will be labeled.</description>
+      <validType>AoiElement</validType>
+      <validType>GraphicElement</validType>
+      <validType>DataElement</validType>
+    </input>
+    <input name="View" originalType="SpatialDataView" type="SpatialDataView" version="4">
+      <description>View where the results pseudocolor layer will be displayed</description>
+      <validType>SpatialDataView</validType>
+      <validType>PerspectiveView</validType>
+      <validType>View</validType>
+    </input>
+    <output name="Number of Blobs" originalType="unsigned int" type="unsigned int" version="4">
+      <description>The number of blobs found after removing blobs which don't meet the minimum size.</description>
+      <validType>unsigned int</validType>
+    </output>
+    <output name="Blobs" originalType="RasterElement" type="DataElement" version="4">
+      <description>Labeled blobs with 0 indicating no blob. In interactive mode, a pseudocolor layer will be created with this element.</description>
+      <validType>RasterElement</validType>
+      <validType>DataElement</validType>
     </output>
   </item>
 
   <item batch="true" batchSupported="true" name="Export Data Set" type="Wizard">
-    <location>438 160</location>
+    <location>657 211</location>
     <input name="Progress" originalType="Progress" type="Progress" version="4">
       <description>Progress object for this plugin.</description>
       <validType>Progress</validType>
@@ -215,7 +362,7 @@
 
   <connection inputItem="4" inputNode="1" outputItem="1" outputNode="0"/>
 
-  <connection inputItem="7" inputNode="1" outputItem="1" outputNode="0"/>
+  <connection inputItem="8" inputNode="1" outputItem="1" outputNode="0"/>
 
   <connection inputItem="3" inputNode="1" outputItem="2" outputNode="0"/>
 
@@ -223,12 +370,26 @@
 
   <connection inputItem="6" inputNode="1" outputItem="5" outputNode="0"/>
 
-  <connection inputItem="7" inputNode="2" outputItem="6" outputNode="0"/>
+  <connection inputItem="8" inputNode="2" outputItem="6" outputNode="0"/>
 
-  <connection inputItem="10" inputNode="3" outputItem="7" outputNode="0"/>
+  <connection inputItem="11" inputNode="3" outputItem="7" outputNode="0"/>
 
-  <connection inputItem="10" inputNode="6" outputItem="8" outputNode="0"/>
+  <connection inputItem="11" inputNode="1" outputItem="8" outputNode="0"/>
 
-  <connection inputItem="10" inputNode="8" outputItem="9" outputNode="0"/>
+  <connection inputItem="11" inputNode="6" outputItem="9" outputNode="0"/>
+
+  <connection inputItem="11" inputNode="5" outputItem="10" outputNode="0"/>
+
+  <connection inputItem="12" inputNode="2" outputItem="11" outputNode="0"/>
+
+  <connection inputItem="13" inputNode="2" outputItem="11" outputNode="0"/>
+
+  <connection inputItem="16" inputNode="1" outputItem="11" outputNode="0"/>
+
+  <connection inputItem="17" inputNode="6" outputItem="14" outputNode="0"/>
+
+  <connection inputItem="17" inputNode="8" outputItem="15" outputNode="0"/>
+
+  <connection inputItem="17" inputNode="3" outputItem="16" outputNode="1"/>
 
 </Wizard>

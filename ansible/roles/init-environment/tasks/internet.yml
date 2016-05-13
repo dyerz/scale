@@ -2,23 +2,8 @@
 # init-environment/tasks/internet.yml
 
 - name: install repos
-  copy: src={{ lookup('pipe', 'ls -1 internet/*.repo') }} dest=/etc/yum.repos.d/
+  copy: src={{ item }} dest=/etc/yum.repos.d/
   become: true
-#  with_items:
-#  - "internet/docker.repo"
-#  - "internet/elasticsearch.repo"
-#  - "internet/epel.repo"
-#  - "internet/glusterfs-epel.repo"
-#  - "internet/kibana.repo"
-#  - "internet/mesosphere.repo"
-#  - "internet/pgdg-94-centos.repo"
-#  - "internet/td.repo"
-
-- name: install gpg-key
-  copy: src={{ item }} dest=/etc/pki/rpm-gpg/
-  become: true
-  with_items:
-  - "internet/RPM-GPG-KEY-PGDG-94"
-  - "internet/RPM-GPG-KEY-EPEL-7"
-  - "internet/RPM-GPG-KEY-mesosphere"
+  with_fileglob:
+    - internet/*.repo
 

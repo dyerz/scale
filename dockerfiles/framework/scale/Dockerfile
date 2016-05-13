@@ -4,13 +4,13 @@ MAINTAINER Trevor R.H. Clarke <tclarke@ball.com>
 RUN useradd -M -d /opt/scale scale
 ADD scale.sudoers /etc/sudoers.d/scale
 
-COPY pip.conf /etc/
-COPY .pydistutils.cfg ~/.pydistutils.cfg
+#COPY pip.conf /etc/
+#COPY .pydistutils.cfg ~/.pydistutils.cfg
 
 ADD mesos-0.24.1-py2.7-linux-x86_64.egg /tmp/
 
 RUN rm -rf /etc/yum.repos.d/*.repo
-COPY local.repo /etc/yum.repos.d/
+COPY *.repo /etc/yum.repos.d/
 
 RUN yum clean all;
 

@@ -2,19 +2,16 @@
 name=Mesosphere Packages for EL 7 - $basearch
 baseurl=http://repos.mesosphere.io/el/7/$basearch/
 enabled=1
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mesosphere
+gpgcheck=0
 
 [mesosphere-noarch]
 name=Mesosphere Packages for EL 7 - noarch
 baseurl=http://repos.mesosphere.io/el/7/noarch/
 enabled=1
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mesosphere
+gpgcheck=0
 
 [mesosphere-source]
 name=Mesosphere Packages for EL 7 - $basearch - Source
 baseurl=http://repos.mesosphere.io/el/7/SRPMS/
 enabled=0
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-mesosphere
+gpgcheck=0

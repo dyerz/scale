@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    angular.module('scaleApp').service('scaleService', function (scaleConfig) {
+    angular.module('scaleApp').service('scaleService', function ($q, $http, scaleConfig) {
         function padWithZero (input, length) {
             // Cast input to string
             input = '' + input;
@@ -61,11 +61,17 @@
             calculateDuration: function (start, stop) {
                 var to = moment.utc(stop),
                     from = moment.utc(start),
-                    diff = moment.utc(to).diff(moment.utc(from));
+                    diff = moment.utc(to).diff(moment.utc(from)),
+                    durationStr = '';
 
                 var duration = moment.duration(diff);
 
-                return padWithZero(duration.days(), 2) + 'd, ' + padWithZero(duration.hours(), 2) + 'h, ' + padWithZero(duration.minutes(), 2) + 'm, ' + padWithZero(duration.seconds(), 2) + 's';
+                durationStr = duration.days() > 0 ? durationStr + padWithZero(duration.days(), 2) + 'd, ' : durationStr;
+                durationStr = duration.hours() > 0 ? durationStr + padWithZero(duration.hours(), 2) + 'h, ' : durationStr;
+                durationStr = duration.minutes() > 0 ? durationStr + padWithZero(duration.minutes(), 2) + 'm, ' : durationStr;
+                durationStr = durationStr + padWithZero(duration.seconds(), 2) + 's';
+                
+                return durationStr;
             },
             getDayString: function(dayNumber){
                 var dayArr = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -80,6 +86,20 @@
                     return true;
                 }
                 return false;
+            },
+            getVersion: function () {
+                var d = $q.defer();
+
+                $http({
+                    url: scaleConfig.urls.apiPrefix + 'v' + scaleConfig.majorVersion + '/version/',
+                    method: 'GET'
+                }).success(function (data) {
+                    d.resolve(data);
+                }).error(function (error) {
+                    d.reject(error);
+                });
+
+                return d.promise;
             }
         }
     });

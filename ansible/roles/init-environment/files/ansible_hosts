@@ -8,13 +8,13 @@
 0.0.0.0
 
 [zookeeper-hosts]
-192.168.56.105
+192.168.56.101
 
 #[zookeeper]
 #0.0.0.0
 
 [mesos-masters]
-192.168.56.105
+192.168.56.101
 
 [scale-scheduler]
 0.0.0.0

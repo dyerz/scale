@@ -3,8 +3,6 @@ from __future__ import unicode_literals
 
 import logging
 
-from job.execution.file_system import get_job_exe_input_dir, get_job_exe_output_dir
-
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +97,10 @@ def _create_docker_task(task):
     logger.info('docker params: %s', task.docker_params)
     
     # add parameters
-    for k ,v in task.docker_params:
+#     for param in task.docker_params:
+#         mesos_task.container.docker.parameters.add(key=param.flag, value=param.value)
+
+    for k, v in task.docker_params:
 #         mesos_task.container.docker.parameters.add(key=k, value=v)
         param = mesos_task.container.docker.parameters.add()
         param.key = k
@@ -119,17 +120,6 @@ def _create_docker_task(task):
     arguments = task.command_arguments.split(" ")
     for argument in arguments:
         mesos_task.command.arguments.append(argument)
-
-    input_dir = get_job_exe_input_dir(task.job_exe_id)
-    output_dir = get_job_exe_output_dir(task.job_exe_id)
-
-    input_vol = mesos_task.container.docker.parameters.add()
-    input_vol.key = "volume"
-    input_vol.value = "%s:%s:ro" % (input_dir, input_dir)
-
-    output_vol = mesos_task.container.docker.parameters.add()
-    output_vol.key = "volume"
-    output_vol.value = "%s:%s:rw" % (output_dir, output_dir)
 
     mesos_task.container.docker.network = mesos_pb2.ContainerInfo.DockerInfo.Network.Value('BRIDGE')
 
