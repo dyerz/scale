@@ -1,8 +1,9 @@
 '''Defines the factory for creating brokers'''
-from storage.brokers.nfs_broker import NfsBroker
+from storage.brokers.nfs_broker import NfsBroker, FsBroker
 
 
-BROKERS = {NfsBroker.broker_type: NfsBroker}
+BROKERS = {NfsBroker.broker_type: NfsBroker,
+           FsBroker.broker_type: FsBroker}
 
 
 def get_broker(broker_type):

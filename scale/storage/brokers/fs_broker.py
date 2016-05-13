@@ -13,11 +13,11 @@ from util.command import execute_command_line
 logger = logging.getLogger(__name__)
 
 
-class NfsBroker(Broker):
+class FsBroker(Broker):
     """Broker that utilizes the NFS (Network File System) protocol
     """
 
-    broker_type = 'nfs'
+    broker_type = 'fs'
 
     def __init__(self):
         """Constructor

@@ -99,11 +99,11 @@ def _create_docker_task(task):
     logger.info('docker params: %s', task.docker_params)
     
     # add parameters
-    for docker_param in task.docker_params:
+    for k ,v in task.docker_params:
 #         mesos_task.container.docker.parameters.add(key=k, value=v)
         param = mesos_task.container.docker.parameters.add()
-        param.key = docker_param['key']
-        param.value = docker_param['value']
+        param.key = k
+        param.value = v
         
     if task.is_docker_privileged:
         mesos_task.container.docker.privileged = True
